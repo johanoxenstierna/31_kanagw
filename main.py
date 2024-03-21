@@ -28,7 +28,8 @@ g = gen_objects.GenObjects()
 g.gen_backgr(ax_b, axs0, axs1)
 
 O0 = g.gen_O0()
-O0 = g.gen_O1(O0)
+# O0 = g.gen_O1(O0)
+O0 = g.gen_O1_new(O0)
 
 plt.gca().invert_yaxis()
 
@@ -72,7 +73,6 @@ def animate(i):
 
             if o1.drawn != 0:  # Its not just boolean!
                 o1.set_clock(i)
-
                 drawBool, index_removed = o1.ani_update_step(ax_b, axs0, axs1, object_type='o1')
 
                 if drawBool == 0:  # dont draw
@@ -83,20 +83,7 @@ def animate(i):
                     prints += "  removing o1"
                     decrement_all_index_axs0(index_removed, O0)
 
-        # for o1_id, o1 in o0.O1f.items():  # this is where most of the CPU time goes
-        #
-        #     if o1.drawn != 0:  # Its not just boolean!
-        #         o1.set_clock(i)
-        #
-        #         drawBool, index_removed = o1.ani_update_step(ax_b, axs0, axs1, object_type='o1')
-        #
-        #         if drawBool == 0:  # dont draw
-        #             continue
-        #         elif drawBool == 1:  # continue drawing
-        #             set_O1(o1, ax_b, axs0)
-        #         elif drawBool == 2:  # remove
-        #             prints += "  removing o1"
-        #             decrement_all_index_axs0(index_removed, O0)
+
 
     print(prints)
 
@@ -109,7 +96,7 @@ print("len of vid: " + str(sec_vid) + " s" + "    " + str(min_vid) + " min")
 
 start_t = time.time()
 ani = animation.FuncAnimation(fig, animate, frames=range(P.FRAMES_START, P.FRAMES_STOP),
-                              blit=True, interval=1, init_func=init,
+                              blit=False, interval=1, init_func=init,
                               repeat=False)  # interval only affects live ani. blitting seems to make it crash
 
 if WRITE == 0:

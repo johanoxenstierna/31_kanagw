@@ -18,10 +18,12 @@ def load_pics():
         pics['backgr_d'] = imread('./pictures/backgr_L.png')
     # pics['backgr_ars'] = imread('./pictures/backgr_ars.png')  # 482, 187
 
+    pics['k0'] = imread('./pictures/k0.png')
+
     # UNIQUE PICTURES FOR A CERTAIN OBJECT
     PATH = './pictures/'  # LOOPING OVER ALL O FOLDERS
     folder_names0 = P.O0_TO_SHOW
-    for folder_name0 in folder_names0:  # shs
+    for folder_name0 in folder_names0:
 
         pics['O0'][folder_name0] = {}
 
@@ -40,6 +42,5 @@ def load_pics():
                     pic = imread(PATH + folder_name0 + '/' + folder_name1 + '/' + file_name)  # without .png
 
                     pics['O0'][folder_name0][folder_name1][file_name[:-4]] = pic
-
 
     return pics

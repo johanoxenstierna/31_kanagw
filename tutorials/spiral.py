@@ -6,7 +6,7 @@ from scipy.stats import beta, gamma
 
 fig, ax = plt.subplots(nrows=1, ncols=1)
 
-NUM = 200
+NUM = 100
 
 xy = np.zeros(shape=(NUM, 2))
 # thetas = np.linspace(0, 10*np.pi, num=50)
@@ -14,11 +14,11 @@ thetas = np.linspace(0.6 * np.pi, -2 * np.pi, num=NUM)
 # add_x = np.linspace(1, 100, num=NUM)
 # add_y = np.linspace(1, 100, num=NUM)
 
-add_x = np.linspace(0, 600, num=NUM)
-sub_y = np.linspace(20, 100, num=NUM)
-radiuss = np.linspace(100, 0.01, num=NUM)
-radiuss = beta.pdf(x=np.linspace(0, 1, NUM), a=2, b=5, loc=0)
-radiuss = min_max_normalization(radiuss, y_range=[5, 30])
+add_x = np.linspace(0, 500, num=NUM)
+sub_y = np.linspace(0, -10, num=NUM)
+# radiuss = np.linspace(100, 0.01, num=NUM)
+radiuss = beta.pdf(x=np.linspace(0, 1, NUM), a=4, b=5, loc=0)
+radiuss = min_max_normalization(radiuss, y_range=[20, 30])
 
 # for theta in np.linspace(0, 10*np.pi):
 for i in range(NUM):

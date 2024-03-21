@@ -67,12 +67,13 @@ class AbstractObject:
             return 1, None
         elif _s.drawn == 2:  # continue drawing
             '''NEW: Checks whether sp is within bounds for ars'''
+            # _s.zorder = int(_s.temp)
             return 1, None
         elif _s.drawn == 3:  # end drawing. OBS ONLY axs0
             try:
                 axs0[_s.index_axs0].remove()  # might save CPU-time
                 axs0.pop(_s.index_axs0)  # OBS OBS!!! MAKES axs0 shorter hence all items after index_axs0 now WRONG
-                _s.ax1 = None
+                _s.ax0 = None
             except:
                 raise Exception("ani_update_step CANT REMOVE AX")
             index_removed = _s.index_axs0

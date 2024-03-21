@@ -5,7 +5,6 @@ from scipy.stats._multivariate import multivariate_normal
 import matplotlib.pyplot as plt
 from src.trig_functions import _multivariate_normal
 
-
 import numpy as np
 
 PATH_IN = './pictures/waves/O1/'

@@ -7,6 +7,7 @@ import P as P
 from src.objects.o0 import O0C
 from src.objects.o1 import O1C
 # from src.objects.o2 import O2C
+from pictures import prep_k0
 
 
 class GenObjects:
@@ -21,7 +22,7 @@ class GenObjects:
     def __init__(_s):
         _s.pics = load_pics()
         _s.gis = _genesis()
-        _s.PATH_IMAGES = './pictures/processed/'
+        # _s.PATH_IMAGES = './pictures/processed/'
         # _s.ch = ch
 
     def gen_backgr(_s, ax_b, axs0, axs1):
@@ -54,7 +55,7 @@ class GenObjects:
             instead use a tensor and scatter.'''
             # for pic_key, pic in O1_pics.items():  # NUM_X.  Modulo needed here, or some way of selecting random
 
-            for i in range(P.NUM_X):
+            for x in range(P.NUM_X):
 
                 '''
                 This will be replaced later with sampling from a prepped image
@@ -63,43 +64,90 @@ class GenObjects:
                 # pic_x_key = str(i) + '_' + 'a'
                 # pic = O1_pics['a']
                 # else:
+                # pic_key = 'b'
+                x_key = str(x)
 
-                pic_x_key = str(i) + '_' + 'b'
-                pic = O1_pics['b']
 
-                pic_f = O1_pics['d']  # one f for each
+                # pic_f = O1_pics['d']  # one f for each. FOR NOW
 
-                for j in range(P.NUM_Z):  # ONLY Z enumerated!
+                for z in range(P.NUM_Z):  # ONLY Z enumerated!
                     '''Start at bottom?'''
                     # pic_enumer = pic_key.split('_')
                     # pic_enumer = int(pic_enumer[-1])
 
-                    if pic_x_key == '18_b':
-                        adf = 5
-                    pic_key = pic_x_key + '_' + str(j)
-                    o1 = O1C(o1_id=pic_key, pic=pic, o0=o0)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                    z_key = str(z)
+
+                    pic_key = 'b'
+                    type = 'static'
+                    id_static = x_key + '_' + z_key + '_' + type
+                    pic_static = O1_pics[pic_key]
+                    o1 = O1C(o1_id=id_static, pic=pic_static, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
                     o1.gen_static()
-                    o0.O1[pic_key] = o1
+                    o0.O1[id_static] = o1
 
 
                     '''Each static has two f linked to it "o1" below.
                     b=foam moving backwards, f=forwards
                     Obs they need to have a lifetime linked with wave-periods. '''
-                    # if pic_x_key != '18_b':
-                    pic_key = str(i) + '_' + 'd_' + str(j) + '_b'
-                    o1f_b = O1C(o1_id=pic_key, pic=pic_f, o0=o0)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                    o1f_b.gen_b(o1)
-                    o0.O1[pic_key] = o1f_b
 
-                    '''TODO: This needs to be controlled through start frames'''
-                    # if pic_x_key in ['15_b', '18_b', '20_b']:  # BECAUSE 15 STARTS AT TOP. KEY IS TO DEFINE START FRAMES
-                    '''1_b is messed up'''
-                    # if pic_x_key != '18_b':  # BECAUSE 15 STARTS AT TOP. KEY IS TO DEFINE START FRAMES
-                    #
-                    pic_key = str(i) + '_' + 'd_' + str(j) + '_f'
-                    o1f_f = O1C(o1_id=pic_key, pic=pic_f, o0=o0)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                    o1f_f.gen_f(o1)
-                    o0.O1[pic_key] = o1f_f
+                    pic_key = 'c'
+                    type = 'f_b'
+                    id_f_b = x_key + '_' + z_key + '_' + type
+                    pic_f_b = O1_pics[pic_key]
+                    o1f_b = O1C(o1_id=id_f_b, pic=pic_f_b, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                    o1f_b.gen_b(o1)
+                    o0.O1[id_f_b] = o1f_b
+
+                    # pic_key = 'd'
+                    # type = 'f_f'
+                    # id_f_f = x_key + '_' + z_key + '_' + type
+                    # pic_f_f = O1_pics[pic_key]
+                    # o1f_f = O1C(o1_id=id_f_f, pic=pic_f_f, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                    # o1f_f.gen_f(o1)
+                    # o0.O1[id_f_f] = o1f_f
+
+        return O0
+
+    def gen_O1_new(_s, O0):
+        """
+        This function may eventually be run to generate cut up images beforehand, if it takes too long.
+        TODO: Need to think about padding the outsides
+        Also need to think about using top-down or sheared k0
+        Also need to think about whether O1s should be combined based on wave directions.
+        Probably not, and bcs of that everything has to be particle-based - everything
+        that is shown needs to be explainable through the generated waves.
+        """
+
+        STARTING_Z = 600  # MOVING DOWN
+
+        '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
+        inds_x = np.linspace(start=500, stop=800, num=P.NUM_X, dtype=int)
+        inds_z = np.linspace(start=STARTING_Z, stop=650, num=P.NUM_Z, dtype=int)
+
+        d = 40  # diameter
+        prep_k0.prep_k0(inds_x, inds_z, d)
+
+        k0 = _s.pics['k0']
+
+        # w, h = 20, 20  # width, height
+
+        for i in range(len(inds_x)):
+            for j in range(len(inds_z)):
+                ind_x = inds_x[i]
+                ind_z = inds_z[j]
+
+                type = 'static'
+                file_name = str(ind_x) + '_' + str(ind_z) + '.npy'
+                id_static = str(i) + '_' + str(j) + '_' + type
+                pic_static = np.load('./pictures/k0_cut/' + file_name)
+
+                o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1.gen_static()
+                O0['waves'].O1[id_static] = o1
+
+                adf = 5
+
+        asdf =5
 
         return O0
 

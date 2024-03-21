@@ -112,7 +112,8 @@ def foam_b(o1):
 
 	alphas = 0.6 * a_x + 0.4 * a_y
 	# alphas = xy[:, 0]  #+ dxy[:, 1]   # origin is left bottom
-	alphas = min_max_normalization(alphas, y_range=[0.01, 0.5])
+	alphas = min_max_normalization(alphas, y_range=[0.1, 0.5])
+	# alphas = min_max_normalization(alphas, y_range=[0.91, 0.99])
 	# alphas = np.ones(shape=(len(xy),))
 
 	aa = 7
@@ -133,11 +134,11 @@ def foam_f(o1f_f, o1, i_f):
 	xy_f = np.zeros(shape=(o1f_f.gi['frames_tot'], 2))
 	# thetas = np.linspace(0, 10*np.pi, num=50)
 	thetas = np.linspace(0.6 * np.pi, -2 * np.pi, num=o1f_f.gi['frames_tot'])
-	add_x = np.linspace(0, 600, num=o1f_f.gi['frames_tot'])  # TODO
-	sub_y = np.linspace(20, 50, num=o1f_f.gi['frames_tot'])  # TODO
+	add_x = np.linspace(0, 500, num=o1f_f.gi['frames_tot'])  # TODO
+	add_y = np.linspace(0, -5, num=o1f_f.gi['frames_tot'])  # TODO
 	# radiuss = np.linspace(25, 1, num=o1f_f.gi['frames_tot'])
 	radiuss = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=5, loc=0)
-	radiuss = min_max_normalization(radiuss, y_range=[5, 30])
+	radiuss = min_max_normalization(radiuss, y_range=[20, 30])
 
 	# for theta in np.linspace(0, 10*np.pi):
 	for i in range(o1f_f.gi['frames_tot']):
@@ -147,7 +148,7 @@ def foam_f(o1f_f, o1, i_f):
 		r = radiuss[i]  # displacement per frame
 
 		xy_f[i, 0] = r * np.cos(theta) + add_x[i]
-		xy_f[i, 1] = r * np.sin(theta) - sub_y[i]
+		xy_f[i, 1] = r * np.sin(theta) + add_y[i]
 		# y = gi['v'] * np.sin(gi['theta']) * t_lin - 0.5 * G * t_lin ** 2
 
 	shift = np.full(shape=(xy_f.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
