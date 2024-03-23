@@ -17,7 +17,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.id_s = o1_id.split('_')
         _s.x_key = int(_s.id_s[0])
         _s.z_key = int(_s.id_s[1])
-        _s.zorder = _s.z_key + 100  # needs x key as well
+        _s.zorder = 100 + _s.z_key + _s.x_key  # needs x key as well
 
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
@@ -37,9 +37,11 @@ class O1C(AbstractObject, AbstractSSS):
         _s.gi['init_frames'] = [_s.o0.gi.o1_init_frames[0]]  # same for all
 
         _s.gi['ld'][0] += _s.o0.gi.o1_left_x[_s.x_key] + _s.o0.gi.o1_left_z[_s.z_key]  # last one is shear! probably removed later
-        _s.gi['ld'][1] += _s.o0.gi.o1_down_z[_s.z_key]
+        _s.gi['ld'][1] -= _s.o0.gi.o1_down_z[_s.z_key]
+        _s.gi['ld'][0] += random.randint(-5, 5)
+        _s.gi['ld'][1] += random.randint(-5, 5)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
-        _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_x[_s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
+        _s.gi['steepness'] = _s.o0.gi.stns_x[_s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
 
     def gen_scale_vector(_s):
@@ -59,7 +61,7 @@ class O1C(AbstractObject, AbstractSSS):
         '''NEXT: add rotation here'''
 
         _s.xy_t, _s.dxy, \
-        _s.alphas = gerstner_wave(gi=_s.gi)
+        _s.alphas, _s.rotation = gerstner_waves(gi=_s.gi)
         # _s.alphas = np.zeros(shape=(_s.gi['frames_tot']))
         # _s.xy[:, 1] *= -1  # flip it.
 
@@ -70,7 +72,7 @@ class O1C(AbstractObject, AbstractSSS):
 
         # _s.o0.populate_T(_s.xy_t, _s.xy, _s.dxy)
 
-        _s.zorder = _s.zorder
+        _s.zorder = _s.zorder #
 
         asdf = 5
 
@@ -84,16 +86,15 @@ class O1C(AbstractObject, AbstractSSS):
         '''
         Zorder bug here, most likely due to zorders were sometimes set to negative number. 
         '''
-        _s.xy, _s.alphas = foam_b(o1)
-        _s.xy[:, 1] += 10
-        # a = 5
-        # b = _s.temp
-        _s.zorder += 5   # WORKS
-        # _s.zorder = _s.zorder - 5  # NOT WORKS
-        # print(_s.zorder)  # USE WHEN DOES NOT WORK
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
+        peaks_inds -= 5
+        neg_inds = np.where(peaks_inds < 0)[0]
+        if len(neg_inds) > 0:
+            peaks_inds[neg_inds] = 0
 
-        # _s.zorder = random.randint(a, b)
-
+        _s.xy, _s.alphas, _s.rotation = foam_b(o1, peaks_inds)
+        _s.xy[:, 1] += 0
+        _s.zorder += 5   # Potentially this will need to be changed dynamically
 
     def gen_f(_s, o1):
         """
@@ -104,17 +105,23 @@ class O1C(AbstractObject, AbstractSSS):
         # aa = np.where(o1.dxy[:, 1] > )
 
         peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
-        if len(peaks_inds) < 1:
-            _s.gi['init_frames'] = [3]
-            _s.gi['frames_tot'] = 2
-            _s.xy = np.array([[4, 4], [5, 5]])
-            _s.alphas = np.array([0.5, 0.5])
-            _s.zorder = 1
-        else:
-            _s.gi['init_frames'] = [peaks_inds[0]]
-            _s.gi['frames_tot'] = 100
-            _s.xy, _s.alphas = foam_f(_s, o1, peaks_inds[0])  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
-            _s.zorder += 20
+        peaks_inds -= 5
+        neg_inds = np.where(peaks_inds < 0)[0]
+        if len(neg_inds) > 0:
+            peaks_inds[neg_inds] = 0
+        # if len(peaks_inds) < 1:
+        #     _s.gi['init_frames'] = [3]
+        #     _s.gi['frames_tot'] = 2
+        #     _s.xy = np.array([[4, 4], [5, 5]])
+        #     _s.alphas = np.array([0.5, 0.5])
+        #     _s.zorder = 1
+        #     _s.rotation = np.array([0, 0])
+        # else:
+            # _s.gi['init_frames'] = [peaks_inds[0]]
+            # _s.gi['frames_tot'] = 50
+
+        _s.xy, _s.alphas, _s.rotation = foam_f(_s, o1, peaks_inds)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
+        _s.zorder += 20
 
     # def set_frame_stop_to_sp_max(_s):
     #     """Loop through sps and set max to frame_stop"""

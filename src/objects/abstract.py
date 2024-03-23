@@ -60,7 +60,7 @@ class AbstractObject:
 
             '''This is where picture copy is created'''
             axs0.append(ax0.imshow(_s.pic, zorder=_s.zorder, alpha=0, origin='lower',
-                                   filternorm=False))  # , extent=[0, 14, 0, 19]))
+                                   filternorm=False, aspect='auto'))  # , extent=[0, 14, 0, 19]))
 
             _s.ax0 = axs0[_s.index_axs0]
 

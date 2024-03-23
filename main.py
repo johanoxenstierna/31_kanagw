@@ -18,8 +18,11 @@ FPS = 40
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, bitrate=3600)
 
-fig, ax_b = plt.subplots(figsize=(10, 6))
-
+fig, ax_b = plt.subplots(figsize=(10, 6), frameon=False)
+fig.subplots_adjust(bottom = 0)
+fig.subplots_adjust(top = 1)
+fig.subplots_adjust(right = 1)
+fig.subplots_adjust(left = 0)
 
 axs0 = []
 axs1 = []
@@ -35,7 +38,7 @@ plt.gca().invert_yaxis()
 
 brkpoint = ''
 '''VIEWER ==========================================='''
-
+print("Done prep")
 
 def init():
     return axs0 #+ axs1
@@ -82,8 +85,6 @@ def animate(i):
                 elif drawBool == 2:  # remove
                     prints += "  removing o1"
                     decrement_all_index_axs0(index_removed, O0)
-
-
 
     print(prints)
 

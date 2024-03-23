@@ -30,28 +30,29 @@ def decrement_all_index_axs0(index_removed, O0, waves=None):
 					if o2.index_axs0 > index_removed:
 						o2.index_axs0 -= 1
 
-	#
-	# PAINFUL 30 min BUG HERE (something messed up above)
-	#
-	# for sp_key, sp in sh.sps.items():
-	# 	if sp.index_axs0 != None and sp.o1 == None:
-	# 		if sp.index_axs0 > index_removed:
-	# 			sp.index_axs0 -= 1
+#
+# PAINFUL 30 min BUG HERE (something messed up above)
+#
+# for sp_key, sp in sh.sps.items():
+# 	if sp.index_axs0 != None and sp.o1 == None:
+# 		if sp.index_axs0 > index_removed:
+# 			sp.index_axs0 -= 1
 
 
 def set_O1(o, ax_b, axs0):
 	""""""
 	M = mtransforms.Affine2D(). \
-		    translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData
+		rotate(o.rotation[o.clock]). \
+	    translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData
 	o.ax0.set_alpha(o.alphas[o.clock])
 	# o.ax0.set_zorder(deepcopy(int(o.zorder)))
 	# o.ax0.set_zorder(1000)
 	o.ax0.set_transform(M)
 
-	# xys_cur = [o.xy[o.clock, 0], o.xy[o.clock, 1]]
-	# axs0[o.index_axs0].set_data(xys_cur)  # SELECTS A SUBSET OF WHATS ALREADY PLOTTED
-	# plt.setp(axs0[o.index_axs0], markersize=10)
-	# axs0[o.index_axs0].set_alpha(o.alphas[o.clock])
+# xys_cur = [o.xy[o.clock, 0], o.xy[o.clock, 1]]
+# axs0[o.index_axs0].set_data(xys_cur)  # SELECTS A SUBSET OF WHATS ALREADY PLOTTED
+# plt.setp(axs0[o.index_axs0], markersize=10)
+# axs0[o.index_axs0].set_alpha(o.alphas[o.clock])
 
 
 # def set_O2(o2, axs0, axs1, ax_b, ii):
@@ -78,8 +79,8 @@ def set_O1(o, ax_b, axs0):
 # 	# axs0[sp.index_axs0].set_color('black')  # OBS
 # 	# try:
 # 	axs0[o2.index_axs0].set_alpha(o2.alphas[o2.clock])
-	# except:
-	# 	adf = 5
+# except:
+# 	adf = 5
 
 
 

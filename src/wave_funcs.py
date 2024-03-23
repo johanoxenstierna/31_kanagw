@@ -8,18 +8,22 @@ import scipy
 from scipy.stats import beta, gamma
 
 
-def gerstner_wave(gi):
+def gerstner_waves(gi):
 
 	"""
-	Per particle! o2
+	Per particle!
+	3 waves:
+	0: The common ones
+	1: The big one
+	2: The small ones in opposite direction
 	"""
 
-	lam = 1.5  # np.pi / 2 - 0.07  # pi is divided by this, WAVELENGTH
-	lam = 200  # np.pi / 2 - 0.07  # pi is divided by this, WAVELENGTH, VERY SENSITIVE
+	# lam = 1.5  # np.pi / 2 - 0.07  # pi is divided by this, WAVELENGTH
+	# lam = 200  # np.pi / 2 - 0.07  # pi is divided by this, WAVELENGTH, VERY SENSITIVE
 
-	c = 0.5
+	# c = 0.5
 	# c = -np.sqrt(9.8 / k)
-	steepness_abs = gi['steepness']
+	stn_particle = gi['steepness']
 
 	# left_start = gi['o1_left_start']
 
@@ -29,33 +33,50 @@ def gerstner_wave(gi):
 
 	xy = np.zeros((frames_tot, 2))  # this is for the final image, which is 2D!
 	dxy = np.zeros((frames_tot, 2))
+	# rotation = np.zeros((frames_tot,))
+	# stns_t = np.linspace(0.99, 0.2, num=frames_tot)
 
+	'''Only for wave 2'''
+	stns_t = np.log(np.linspace(start=1.0, stop=20, num=frames_tot))
+	beta_pdf = beta.pdf(x=np.linspace(0, 1, frames_tot), a=10, b=50, loc=0)
+	stns_t = min_max_normalization(beta_pdf, y_range=[0, 1])
 	'''Shifting is irrelevant here, because its done in o2 finish_info'''
 	x = gi['ld'][0]
 	z = gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	# alphas = np.zeros(shape=(len(xy),))
-	alphas = np.full(shape=(len(xy),), fill_value=0.5)
-
-	for w in range(0, 1):  # NUM WAVES
+	for w in range(0, 3):  # NUM WAVES
 
 		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
-			d = np.array([0.6, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
+			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([1, 0.0])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.1  # prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
-			lam = 200
+			c = 0.01  # prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			lam = 300
+			# stn0 = stn_particle
+			k = 2 * np.pi / lam  # wavenumber
+			# stn_particle = 0.01
+			stn = stn_particle / k
 			# steepness_abs = 1.0
 		elif w == 1:
+			d = np.array([0.2, -0.6])
+			c = 0.003  # from 0.6 -> 0.06
+			lam = 1000
+			k = 2 * np.pi / lam
+			stn0 = None
+			# steepness_abs = 1
+		elif w == 2:
 			d = np.array([-0.1, -0.4])
-			c = 0.1  # from 0.6 -> 0.06
+			c = -0.001  # from 0.6 -> 0.06
 			lam = 50
-			# steepness_abs = 0.9
-
-		k = 2 * np.pi / lam  # wavenumber
-		stn = steepness_abs / k
+			k = 2 * np.pi / lam  # wavenumber
+			# stn = stn_particle / k
+			stn = 0.5 / k
 
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
+			if w == 1:
+				stn = (0.01 * stn_particle + 0.99 * stns_t[i]) / k
+
+			# stn = stns_t[i]
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
 
 			xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
@@ -81,146 +102,177 @@ def gerstner_wave(gi):
 	# alphas = np.linspace(start=0.01, stop=0.99, num=frames_tot)
 
 	'''NEED TO SHIFT BY LEFT START SOMEHOW'''
+	peaks = scipy.signal.find_peaks(xy[:, 1])[0]
+	alphas = np.full(shape=(len(xy),), fill_value=0.8)
+
+	peaks_pos_y = []  # crest
+	for i in range(len(peaks)):
+		pk_ind = peaks[i]
+		if pk_ind > 5 and xy[pk_ind, 1] > 0:
+			peaks_pos_y.append(pk_ind)
+
+	for i in range(len(peaks_pos_y) - 1):
+		peak_ind0 = peaks_pos_y[i]
+		peak_ind1 = peaks_pos_y[i + 1]
+		num = int((peak_ind1 - peak_ind0) / 2)
+		start = peak_ind0 + int(0.5 * num)
+		# alphas[pk_ind0:pk_ind1 + num]
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.8, 1])
+
+		alphas[start:start + num] = alpha_mask
+
+
+	adf = 6
+
 	# alphas = -xy[:, 0] - xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	# alphas = min_max_normalization(alphas, y_range=[0.01, 0.9])
+	# alphas = dxy[:, 1]
+	# alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
 
-	return xy, dxy, alphas
+	rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
+	# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
+
+	return xy, dxy, alphas, rotation
 
 
-def foam_b(o1):
+def foam_b(o1, peak_inds):
 	"""
 
 	"""
 
 	# _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
-	xy = np.copy(o1.xy)
-	xy[:, 0] *= 1
-
-	# alphas = np.zeros(shape=(o1.gi['frames_tot']))
-	# peaks_inds = scipy.signal.find_peaks(o1.xy[:, 1], distance=50)[0]
-
-	# alphas = -0.2 * xy[:, 0] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	# alphas = 0.2 * xy[:, 1] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	a_x = o1.xy_t[:, 0]
-	inds = np.where(a_x < 0)[0]
-	a_x[inds] = 0
-
-	a_y = o1.xy_t[:, 1]
+	# xy = np.copy(o1.xy)
+	# xy[:, 0] *= 1
+	# # xy[:, 1] += 100
+	#
+	# # alphas = np.zeros(shape=(o1.gi['frames_tot']))
+	# # peaks_inds = scipy.signal.find_peaks(o1.xy[:, 1], distance=50)[0]
+	#
+	# # alphas = -0.2 * xy[:, 0] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
+	# # alphas = 0.2 * xy[:, 1] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
+	# a_x = o1.xy_t[:, 0]
 	# inds = np.where(a_x < 0)[0]
 	# a_x[inds] = 0
+	#
+	# a_y = o1.xy_t[:, 1]
+	# # inds = np.where(a_x < 0)[0]
+	# # a_x[inds] = 0
+	#
+	# alphas = 0.0 * a_x + 0.99 * a_y
+	# # alphas = xy[:, 0]  #+ dxy[:, 1]   # origin is left bottom
+	# alphas = min_max_normalization(alphas, y_range=[0.01, 0.3])
+	# # alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
+	# # alphas = np.ones(shape=(len(xy),))
+	xy_t = np.copy(o1.xy_t)
+	rotation = np.zeros((len(o1.xy),))
+	alphas = np.zeros(shape=(len(xy_t),))
 
-	alphas = 0.6 * a_x + 0.4 * a_y
-	# alphas = xy[:, 0]  #+ dxy[:, 1]   # origin is left bottom
-	alphas = min_max_normalization(alphas, y_range=[0.1, 0.5])
-	# alphas = min_max_normalization(alphas, y_range=[0.91, 0.99])
-	# alphas = np.ones(shape=(len(xy),))
+
+	for i in range(len(peak_inds) - 1):
+		peak_ind0 = peak_inds[i]
+		peak_ind1 = peak_inds[i + 1]
+
+		num = int((peak_ind1 - peak_ind0) / 2)
+
+		start = int(peak_ind0 + 0.2 * num)
+
+		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		mult_x = min_max_normalization(mult_x, y_range=[0.2, 1])
+		xy_t[start:start + num, 0] *= mult_x
+
+		mult_y = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		mult_y = min_max_normalization(mult_y, y_range=[1.1, 3])
+		xy_t[start:start + num, 1] *= mult_y
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.3])
+
+		alphas[start:start + num] = alpha_mask
 
 	aa = 7
 
+	xy = np.copy(xy_t)
+
+	shift = np.full(shape=(xy.shape), fill_value=[o1.xy[o1.gi['init_frames'][0], 0],
+	                                              o1.xy[o1.gi['init_frames'][
+		                                                    0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
+	xy[:, :] += shift
+
 	# alphas[peaks_inds] = 1
 
-	return xy, alphas
+	return xy, alphas, rotation
 
 
-def foam_f(o1f_f, o1, i_f):
+def foam_f(o1f_f, o1, peak_inds):
 	"""
 	TODO: Need to do projectile motion until y tangent first becomes positive.
 	Precompute peaks and use those indicies as starting points.
 	"""
 
-	# xy = np.copy(o1.xy)
+	xy_t = np.copy(o1.xy_t)
+	# xy_f = np.zeros(shape=(o1f_f.gi['frames_tot'], 2))
+	alphas = np.zeros(shape=(len(xy_t),))
 
-	xy_f = np.zeros(shape=(o1f_f.gi['frames_tot'], 2))
 	# thetas = np.linspace(0, 10*np.pi, num=50)
-	thetas = np.linspace(0.6 * np.pi, -2 * np.pi, num=o1f_f.gi['frames_tot'])
-	add_x = np.linspace(0, 500, num=o1f_f.gi['frames_tot'])  # TODO
-	add_y = np.linspace(0, -5, num=o1f_f.gi['frames_tot'])  # TODO
+	thetas = np.linspace(0.6 * np.pi, -1 * np.pi, num=o1f_f.gi['frames_tot'])
+	add_x = np.linspace(50, 500, num=o1f_f.gi['frames_tot'])  # TODO
+	add_y = np.linspace(-10, -200, num=o1f_f.gi['frames_tot'])  # # minus is DOWN
 	# radiuss = np.linspace(25, 1, num=o1f_f.gi['frames_tot'])
 	radiuss = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=5, loc=0)
-	radiuss = min_max_normalization(radiuss, y_range=[20, 30])
+	radiuss = min_max_normalization(radiuss, y_range=[5, 50])
 
 	# for theta in np.linspace(0, 10*np.pi):
-	for i in range(o1f_f.gi['frames_tot']):
-		theta = thetas[i]
+	# for i in range(o1f_f.gi['frames_tot']):
+	# 	theta = thetas[i]
+	#
+	# 	# r = o1.gi['frames_tot'] - i  # radius
+	# 	r = radiuss[i]  # displacement per frame
+	#
+	# 	# xy_f[i, 0] = r * np.cos(theta) #+ add_x[i]
+	# 	# xy_f[i, 1] = r * np.sin(theta) #+ add_y[i]
+	#
+	# 	# y = gi['v'] * np.sin(gi['theta']) * t_lin - 0.5 * G * t_lin ** 2
 
-		# r = o1.gi['frames_tot'] - i  # radius
-		r = radiuss[i]  # displacement per frame
+	for i in range(len(peak_inds) - 1):
+		peak_ind0 = peak_inds[i]
+		peak_ind1 = peak_inds[i + 1]
 
-		xy_f[i, 0] = r * np.cos(theta) + add_x[i]
-		xy_f[i, 1] = r * np.sin(theta) + add_y[i]
-		# y = gi['v'] * np.sin(gi['theta']) * t_lin - 0.5 * G * t_lin ** 2
+		num = int((peak_ind1 - peak_ind0) / 2)
 
-	shift = np.full(shape=(xy_f.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
+		mult = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		mult = min_max_normalization(mult, y_range=[1, 2.5])
+
+		xy_t[peak_ind0:peak_ind0 + num, 0] *= mult
+		# xy_t[peak_ind0:peak_ind0 + num, 1] *= mult
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.5])
+
+		alphas[peak_ind0:peak_ind0 + num] = alpha_mask
+
+
+		aa = 5
+
+	xy = np.copy(xy_t)
+
+	shift = np.full(shape=(xy.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
 	                                                o1.xy[o1f_f.gi['init_frames'][0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
+	xy[:, :] += shift
+	# xy += xy_t
 
-	xy_f[:, :] += shift
-
-	alphas = radiuss
-	# alphas = np.ones(shape=(len(radiuss),))
-	alphas = min_max_normalization(alphas, y_range=[0.01, 0.9])
+	# alphas = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=10, loc=0)
+	# alphas = min_max_normalization(alphas, y_range=[0.99, 0.99])
 
 	# o1.xy[i_f:i_f + len(xy_f), 1] -= 0.5  # not gonna work here cuz this is only gonna affect next wave. SOLUTION: use steepness
 
 	# if o1.id != '15_b_0':2
 	# 	alphas = np.zeros(shape=(o1f_f.gi['frames_tot'],))
 
-	aa = 5
+	rotation = np.zeros((len(xy),))
 
-	# alphas[peaks_inds] = 1
-
-	# PROJ
-	# xy = np.zeros((gi['frames_tot'], 2))  # MIDPOINT
-	#
-	# G = 9.8
-	# # h = gi['v'] * 10  # THIS IS THE NUMBER OF PIXELS IT WILL GO
-	# h = 0.7 * 400 + 0.3 * gi['v'] * 5  # THIS IS THE NUMBER OF PIXELS IT WILL GO
-	#
-	# # t_flight = 6 * v * np.sin(theta) / G
-	#
-	# '''
-    # OBS since projectile is launched from a height, the calculation is different:
-    # https://www.omnicalculator.com/physics/time-of-flight-projectile-motion
-    # from ground level:
-    # t_flight = 4 * gi['v'] * np.sin(gi['theta']) / G  # 4 means they land at origin. 5 little bit below
-	#
-    # '''
-	# t_flight = (gi['v'] * np.sin(gi['theta']) + np.sqrt((gi['v'] * np.sin(gi['theta'])) ** 2 + 2 * G * h)) / G
-	#
-	# t_lin = np.linspace(0, t_flight, gi['frames_tot'])
-	# # t_geo = np.geomspace(0.08, t_flight ** 1.2, gi['frames_tot'])
-	# # t_geo_0 = np.geomspace(0.5, t_flight ** 1, gi['frames_tot'])  # POWER CONTROLS DISTANCE
-	# # t_geo_1 = np.geomspace(0.5, t_flight ** 1, gi['frames_tot'])
-	#
-	# x = gi['v'] * np.cos(gi['theta']) * t_lin
-	# # x_lin = abs(gi['v'] * np.cos(gi['theta']) * t_lin)  # THIS IS ALWAYS POSITIVE
-	# # x_geo = abs(2 * gi['v'] * np.cos(gi['theta']) * t_geo_0)  # THIS IS ALWAYS POSITIVE. KEEP IT SIMPLE
-	# # # x = 0.0001 * x_lin * t_lin + 0.2 * x_lin * x_geo
-	# # # x = 0.00001 * x_lin * t_lin + 0.1 * x_lin * x_geo
-	# # # x = 0.001 * x_lin * t_lin + 0.005 * x_lin * x_geo
-	# # # x = 0.05 * x_lin + 0.95 * x_geo
-	# # x = x
-	#
-	# '''If theta is close enough '''
-	# y = gi['v'] * np.sin(gi['theta']) * 2 * t_lin - 0.5 * G * t_lin ** 2
-	#
-	# # y_lin = gi['v'] * np.sin(gi['theta']) * 2 * t_lin #- 0.5 * G * t_lin ** 2  # OBS OBS this affect both up and down equally
-	# # y_geo = gi['v'] * np.sin(gi['theta']) * 2 * t_geo_1 - 0.5 * G * t_geo_1 ** 2
-	#
-	# # y = 0.3 * y_lin + 0.7 * y_geo  # THIS AFFECTS HOW FAR DOWN THEY GO
-	# # y = 0.05 * y_lin + 0.95 * y_geo  # THIS AFFECTS HOW FAR DOWN THEY GO
-	# # y = y_geo  # THIS AFFECTS HOW FAR DOWN THEY GO
-	#
-	# xy[:, 0] = x
-	# xy[:, 1] = y
-	#
-	#
-
-
-
-
-	return xy_f, alphas
-
+	return xy, alphas, rotation
 
 
 def shift_wave(xy_t, origin=None, gi=None):
@@ -250,7 +302,7 @@ if __name__ == '__main__':  # cant be done in trig funcs main cuz circular impor
 	gi['ld'] = [0, 0]
 	gi['steepness'] = 150
 	gi['frames_tot'] = 300
-	xy, alphas = gerstner_wave(gi=gi)
+	xy, alphas = gerstner_waves(gi=gi)
 
 	ax1 = plt.plot(alphas)
 	# ax1 = plt.plot(xy[:, 0])

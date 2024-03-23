@@ -1,4 +1,6 @@
 .idea
 __pycache__
 vids/
-pictures/k0_cut
+pictures/k0_cut/
+pictures/k0.png
+pictures/k0_old.png

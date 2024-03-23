@@ -5,7 +5,7 @@ from src.trig_functions import min_max_normalization
 
 
 
-beta_pdf = beta.pdf(x=np.linspace(0, 1, 100), a=2, b=5, loc=0)
+beta_pdf = beta.pdf(x=np.linspace(0, 1, 50), a=2, b=2, loc=0)
 beta_pdf = min_max_normalization(beta_pdf, y_range=[1, 25])
 ax0 = plt.plot(beta_pdf)
 

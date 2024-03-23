@@ -11,7 +11,7 @@ import P
 import numpy as np
 
 
-def prep_k0(inds_x, inds_z, d):
+def cut_k0(k0, inds_x, inds_z, d=None):
     """
     Generates the static pics
     """
@@ -20,14 +20,10 @@ def prep_k0(inds_x, inds_z, d):
 
     delete_old(PATH_OUT)
 
-    k0 = imread('./pictures/k0.png')
-
-    w, h = 20, 20  # width, height
-    # d = 10  # diameter
-
     '''Alpha mask'''
-    rv = multivariate_normal(mean=[d, d], cov=[[d*20, 0], [0, d*20]])
-    x, y = np.mgrid[0:d*2:1, 0:d*2:1]
+    rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*10, 0], [0, d*10]])
+    # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
+    x, y = np.mgrid[0:d:1, 0:d:1]
     pos = np.dstack((x, y))
     mask = rv.pdf(pos)
     mask = mask / np.max(mask)
@@ -41,13 +37,33 @@ def prep_k0(inds_x, inds_z, d):
 
             # aa = k0[:, 60:20:-1, :]
 
-            pic = k0[ind_z + d:ind_z - d:-1, ind_x - d:ind_x + d, :]
+            pic = k0[ind_z + int(d/2):ind_z - int(d/2):-1, ind_x - int(d/2):ind_x + int(d/2), :]
 
-            alpha = pic[:, :, 3] * mask
-            # pic[:, :, 3] = alpha
+            # alpha = pic[:, :, 3] * mask  # ???
+            pic[:, :, 3] = mask
 
             pic_key = str(ind_x) + '_' + str(ind_z)
             np.save(PATH_OUT + pic_key, pic)
+
+
+def get_c_d(k0, d):
+    c_ = k0[0:d, 100:100 + d, :]
+    # d_ = k0[0:d, 0:d, :]
+    # d_ = k0[0:int(d/2), 0:int(d/2), :]
+    d_ = k0[0:d, 0:d, :]
+
+    rv = multivariate_normal(mean=[d / 2, d / 2], cov=[[d * 3, 0], [0, d * 3]])
+    # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
+    x, y = np.mgrid[0:d:1, 0:d:1]
+    pos = np.dstack((x, y))
+    mask = rv.pdf(pos)
+    mask = mask / np.max(mask)
+
+    c_[:, :, 3] = mask
+    d_[:, :, 3] = mask
+
+
+    return c_, d_
 
 
 def delete_old(PATH):
