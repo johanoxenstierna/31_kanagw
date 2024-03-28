@@ -44,12 +44,12 @@ def gerstner_waves(gi):
 	x = gi['ld'][0]
 	z = gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	for w in range(0, 3):  # NUM WAVES
+	for w in range(0, 1):  # NUM WAVES
 
 		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([1, 0.0])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.01  # prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			c = 0.1  # 0.1 prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			lam = 300
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
@@ -58,18 +58,18 @@ def gerstner_waves(gi):
 			# steepness_abs = 1.0
 		elif w == 1:
 			d = np.array([0.2, -0.6])
-			c = 0.003  # from 0.6 -> 0.06
+			c = -0.03  # 0.003
 			lam = 1000
 			k = 2 * np.pi / lam
 			stn0 = None
 			# steepness_abs = 1
 		elif w == 2:
-			d = np.array([-0.1, -0.4])
-			c = -0.001  # from 0.6 -> 0.06
+			d = np.array([-0.2, -0.6])
+			c = 0.3  # from 0.6 -> 0.06
 			lam = 50
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
-			stn = 0.5 / k
+			stn = 0.99 / k
 
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
@@ -79,7 +79,11 @@ def gerstner_waves(gi):
 			# stn = stns_t[i]
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
 
-			xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
+			if w != 2:
+				xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
+			elif w == 2:
+				xy[i, 0] -= stn * np.cos(y)
+
 			xy[i, 1] += stn * np.sin(y)
 
 			'''
@@ -103,7 +107,7 @@ def gerstner_waves(gi):
 
 	'''NEED TO SHIFT BY LEFT START SOMEHOW'''
 	peaks = scipy.signal.find_peaks(xy[:, 1])[0]
-	alphas = np.full(shape=(len(xy),), fill_value=0.8)
+	alphas = np.full(shape=(len(xy),), fill_value=0.3)
 
 	peaks_pos_y = []  # crest
 	for i in range(len(peaks)):
@@ -119,9 +123,8 @@ def gerstner_waves(gi):
 		# alphas[pk_ind0:pk_ind1 + num]
 
 		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.8, 1])
-
-		alphas[start:start + num] = alpha_mask
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.3, 1])
+		# alphas[start:start + num] = alpha_mask
 
 
 	adf = 6
@@ -130,8 +133,9 @@ def gerstner_waves(gi):
 	# alphas = dxy[:, 1]
 	# alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
 
-	rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
+	# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
 	# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
+	rotation = np.zeros(shape=(len(xy),))
 
 	return xy, dxy, alphas, rotation
 
@@ -141,8 +145,37 @@ def foam_b(o1, peak_inds):
 
 	"""
 
-	# _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
+	xy_t = np.copy(o1.xy_t)
+	rotation = np.zeros((len(o1.xy),))
+	alphas = np.zeros(shape=(len(xy_t),))
 
+	for i in range(len(peak_inds) - 1):
+		peak_ind0 = peak_inds[i]
+		peak_ind1 = peak_inds[i + 1]
+
+		num = int((peak_ind1 - peak_ind0) / 2)  # num is HALF
+
+		start = int(peak_ind0 + 0.8 * num)
+
+		# mult_x = - beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		# mult_x = min_max_normalization(mult_x, y_range=[0.2, 1])
+		# aa = mult_x
+		#
+		# mult_y = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		# mult_y = min_max_normalization(mult_y, y_range=[1, 1])
+		#
+		# xy_t[start:start + num, 0] *= mult_x
+		# xy_t[start:start + num, 1] *= mult_y
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.99])
+
+		alphas[start:start + num] = alpha_mask
+
+	aa = 7
+
+	# PEND DEL
+	# _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 	# xy = np.copy(o1.xy)
 	# xy[:, 0] *= 1
 	# # xy[:, 1] += 100
@@ -165,63 +198,112 @@ def foam_b(o1, peak_inds):
 	# alphas = min_max_normalization(alphas, y_range=[0.01, 0.3])
 	# # alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
 	# # alphas = np.ones(shape=(len(xy),))
-	xy_t = np.copy(o1.xy_t)
-	rotation = np.zeros((len(o1.xy),))
-	alphas = np.zeros(shape=(len(xy_t),))
 
+	# xy = np.copy(xy_t)
 
-	for i in range(len(peak_inds) - 1):
-		peak_ind0 = peak_inds[i]
-		peak_ind1 = peak_inds[i + 1]
-
-		num = int((peak_ind1 - peak_ind0) / 2)
-
-		start = int(peak_ind0 + 0.2 * num)
-
-		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		mult_x = min_max_normalization(mult_x, y_range=[0.2, 1])
-		xy_t[start:start + num, 0] *= mult_x
-
-		mult_y = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		mult_y = min_max_normalization(mult_y, y_range=[1.1, 3])
-		xy_t[start:start + num, 1] *= mult_y
-
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.3])
-
-		alphas[start:start + num] = alpha_mask
-
-	aa = 7
-
-	xy = np.copy(xy_t)
-
-	shift = np.full(shape=(xy.shape), fill_value=[o1.xy[o1.gi['init_frames'][0], 0],
-	                                              o1.xy[o1.gi['init_frames'][
-		                                                    0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
-	xy[:, :] += shift
+	# shift = np.full(shape=(xy.shape), fill_value=[o1.xy[0, 0], o1.xy[0, 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
+	# shift = np.full(shape=(xy_t.shape), fill_value=[o1.xy[0, 0], o1.xy[0, 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
+	# xy[:, :] += shift
 
 	# alphas[peaks_inds] = 1
 
-	return xy, alphas, rotation
+	return xy_t, alphas, rotation
 
 
-def foam_f(o1f_f, o1, peak_inds):
+def foam_f(o1, peak_inds):
 	"""
 	TODO: Need to do projectile motion until y tangent first becomes positive.
 	Precompute peaks and use those indicies as starting points.
 	"""
 
 	xy_t = np.copy(o1.xy_t)
-	# xy_f = np.zeros(shape=(o1f_f.gi['frames_tot'], 2))
-	alphas = np.zeros(shape=(len(xy_t),))
+	rotation = np.zeros((len(o1.xy),))
+	alphas = np.full(shape=(len(xy_t),), fill_value=0.0)
 
+	# pos_inds_x = np.where(xy_t[:, 0] > 0)[0]  # these are used for a later reset
+	# neg_inds_x = np.where(xy_t[:, 0] < 0)[0]  # these are used for a later reset
+	# pos_inds_y = np.where(xy_t[:, 1] > 0)[0]
+	# neg_inds_y = np.where(xy_t[:, 1] < 0)[0]
+
+	# aa = np.where((xy_t[:, 0] > 0) & (xy_t[:, 1] > 0))[0]
+	# xy_t[aa, 0] *= 2
+
+	'''Shift to upper left'''
+	xy_t_min_x = np.min(xy_t[:, 0])
+	xy_t_min_y = np.min(xy_t[:, 1])
+
+	# xy_t[:, 0] += abs(xy_t_min_x)  # 1
+	# xy_t[:, 1] += abs(xy_t_min_y)
+	#
+	# xy_t[:, 0] *= 3  # 2
+	# xy_t[:, 1] *= 2  # 2
+	#
+	# xy_t[:, 0] -= abs(xy_t_min_x) * 3
+	# xy_t[:, 1] -= abs(xy_t_min_y) * 2
+
+	# span_range = np.arange(start=np.min(xy_t[:, 1]), stop=np.max(xy_t[:, 1]), dtype=int)
+	# mults_x = np.linspace(start=1, stop=2, num=len(span_range))
+	#
+	# for i in range(len(xy_t)):
+	# 	y_val_at_i = xy_t[i, 1]
+	# 	qr = 5
+	#
+	# adf = 6
+
+	for i in range(len(peak_inds) - 1):
+		peak_ind0 = peak_inds[i]
+		peak_ind1 = peak_inds[i + 1]
+
+		num = int((peak_ind1 - peak_ind0) / 2)
+		start = int(peak_ind0 + 0 * num)
+
+		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		mult_x = min_max_normalization(mult_x, y_range=[1, 1])
+
+		mult_y = -beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		mult_y = min_max_normalization(mult_y, y_range=[1, 1])
+
+		# xy_t[start:start + num, 0] *= mult_x
+		#
+		# # aa = xy_t[start:start + num, 0]
+		# # bb = o1.xy_t[start:start + num, 0]
+		# aa = np.copy(xy_t)
+		# xy_t[start:start + num, 1] *= mult_y
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.99])
+
+		alphas[start:start + num] = alpha_mask
+
+		aa = 5
+
+	# xy_t[pos_inds_x, 0] *= 2
+	# xy_t[neg_inds_x, 0] = o1.xy_t[neg_inds_x, 0]
+	# xy_t[neg_inds_y, 1] = o1.xy_t[neg_inds_y, 1]
+
+	# shift = np.full(shape=(o1.xy.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
+	#                                                 o1.xy[o1f_f.gi['init_frames'][0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
+	#
+	# xy = np.copy(xy_t)
+	# xy[:, :] += shift
+	# xy += xy_t
+
+	# alphas = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=10, loc=0)
+	# alphas = min_max_normalization(alphas, y_range=[0.99, 0.99])
+
+	# o1.xy[i_f:i_f + len(xy_f), 1] -= 0.5  # not gonna work here cuz this is only gonna affect next wave. SOLUTION: use steepness
+
+	# if o1.id != '15_b_0':2
+	# 	alphas = np.zeros(shape=(o1f_f.gi['frames_tot'],))
+
+	# PEND DEL
 	# thetas = np.linspace(0, 10*np.pi, num=50)
-	thetas = np.linspace(0.6 * np.pi, -1 * np.pi, num=o1f_f.gi['frames_tot'])
-	add_x = np.linspace(50, 500, num=o1f_f.gi['frames_tot'])  # TODO
-	add_y = np.linspace(-10, -200, num=o1f_f.gi['frames_tot'])  # # minus is DOWN
+	# thetas = np.linspace(0.6 * np.pi, -1 * np.pi, num=o1f_f.gi['frames_tot'])
+	# add_x = np.linspace(50, 500, num=o1f_f.gi['frames_tot'])  # TODO
+	# add_y = np.linspace(-10, -200, num=o1f_f.gi['frames_tot'])  # # minus is DOWN
 	# radiuss = np.linspace(25, 1, num=o1f_f.gi['frames_tot'])
-	radiuss = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=5, loc=0)
-	radiuss = min_max_normalization(radiuss, y_range=[5, 50])
+	# radiuss = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=5, loc=0)
+	# radiuss = min_max_normalization(radiuss, y_range=[5, 50])
 
 	# for theta in np.linspace(0, 10*np.pi):
 	# for i in range(o1f_f.gi['frames_tot']):
@@ -235,44 +317,7 @@ def foam_f(o1f_f, o1, peak_inds):
 	#
 	# 	# y = gi['v'] * np.sin(gi['theta']) * t_lin - 0.5 * G * t_lin ** 2
 
-	for i in range(len(peak_inds) - 1):
-		peak_ind0 = peak_inds[i]
-		peak_ind1 = peak_inds[i + 1]
-
-		num = int((peak_ind1 - peak_ind0) / 2)
-
-		mult = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		mult = min_max_normalization(mult, y_range=[1, 2.5])
-
-		xy_t[peak_ind0:peak_ind0 + num, 0] *= mult
-		# xy_t[peak_ind0:peak_ind0 + num, 1] *= mult
-
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.5])
-
-		alphas[peak_ind0:peak_ind0 + num] = alpha_mask
-
-
-		aa = 5
-
-	xy = np.copy(xy_t)
-
-	shift = np.full(shape=(xy.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
-	                                                o1.xy[o1f_f.gi['init_frames'][0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
-	xy[:, :] += shift
-	# xy += xy_t
-
-	# alphas = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=10, loc=0)
-	# alphas = min_max_normalization(alphas, y_range=[0.99, 0.99])
-
-	# o1.xy[i_f:i_f + len(xy_f), 1] -= 0.5  # not gonna work here cuz this is only gonna affect next wave. SOLUTION: use steepness
-
-	# if o1.id != '15_b_0':2
-	# 	alphas = np.zeros(shape=(o1f_f.gi['frames_tot'],))
-
-	rotation = np.zeros((len(xy),))
-
-	return xy, alphas, rotation
+	return xy_t, alphas, rotation
 
 
 def shift_wave(xy_t, origin=None, gi=None):

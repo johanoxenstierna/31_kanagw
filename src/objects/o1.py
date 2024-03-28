@@ -23,7 +23,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.pic = pic  # the png
         _s.type = type
         _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!
-        _s.temp = random.randint(5, 10000)
+        # _s.temp = random.randint(5, 10000)
 
         AbstractSSS.__init__(_s, o0, o1_id)
 
@@ -36,10 +36,10 @@ class O1C(AbstractObject, AbstractSSS):
 
         _s.gi['init_frames'] = [_s.o0.gi.o1_init_frames[0]]  # same for all
 
-        _s.gi['ld'][0] += _s.o0.gi.o1_left_x[_s.x_key] + _s.o0.gi.o1_left_z[_s.z_key]  # last one is shear! probably removed later
-        _s.gi['ld'][1] -= _s.o0.gi.o1_down_z[_s.z_key]
-        _s.gi['ld'][0] += random.randint(-5, 5)
-        _s.gi['ld'][1] += random.randint(-5, 5)
+        _s.gi['ld'][0] = _s.o0.gi.o1_left_x[_s.x_key] + _s.o0.gi.o1_left_z[_s.z_key]  # last one is shear! probably removed later
+        _s.gi['ld'][1] = _s.o0.gi.o1_down_z[_s.z_key]
+        # _s.gi['ld'][0] += random.randint(-5, 5)
+        # _s.gi['ld'][1] += random.randint(-5, 5)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['steepness'] = _s.o0.gi.stns_x[_s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
@@ -70,6 +70,8 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
 
+        # _s.xy[:, 1] += 50
+
         # _s.o0.populate_T(_s.xy_t, _s.xy, _s.dxy)
 
         _s.zorder = _s.zorder #
@@ -77,24 +79,27 @@ class O1C(AbstractObject, AbstractSSS):
         asdf = 5
 
     def gen_b(_s, o1):
-        """Only called by o1f"""
+        """
 
-        '''indicies where y-tangent is at max'''
-        # aa = np.where(o1.dxy[:, 1] > )
+        """
 
+        # _s.xy = np.copy(o1.xy)
+        _s.rotation = np.zeros((len(o1.xy),))
+        _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
-        '''
-        Zorder bug here, most likely due to zorders were sometimes set to negative number. 
-        '''
         peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
-        peaks_inds -= 5
+        peaks_inds -= 30
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
             peaks_inds[neg_inds] = 0
 
-        _s.xy, _s.alphas, _s.rotation = foam_b(o1, peaks_inds)
-        _s.xy[:, 1] += 0
+        _s.xy_t, _s.alphas, _s.rotation = foam_b(o1, peaks_inds)
         _s.zorder += 5   # Potentially this will need to be changed dynamically
+
+        _s.xy = np.copy(_s.xy_t)
+        _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
+        _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
+        _s.xy[:, 1] += 5
 
     def gen_f(_s, o1):
         """
@@ -105,10 +110,10 @@ class O1C(AbstractObject, AbstractSSS):
         # aa = np.where(o1.dxy[:, 1] > )
 
         peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
-        peaks_inds -= 5
-        neg_inds = np.where(peaks_inds < 0)[0]
-        if len(neg_inds) > 0:
-            peaks_inds[neg_inds] = 0
+        # peaks_inds -= 5
+        # neg_inds = np.where(peaks_inds < 0)[0]
+        # if len(neg_inds) > 0:
+        #     peaks_inds[neg_inds] = 0
         # if len(peaks_inds) < 1:
         #     _s.gi['init_frames'] = [3]
         #     _s.gi['frames_tot'] = 2
@@ -120,8 +125,13 @@ class O1C(AbstractObject, AbstractSSS):
             # _s.gi['init_frames'] = [peaks_inds[0]]
             # _s.gi['frames_tot'] = 50
 
-        _s.xy, _s.alphas, _s.rotation = foam_f(_s, o1, peaks_inds)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
+        _s.xy_t, _s.alphas, _s.rotation = foam_f(o1, peaks_inds)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
         _s.zorder += 20
+
+        _s.xy = np.copy(_s.xy_t)
+        _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
+        _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
+        # _s.xy[:, 1] += 10
 
     # def set_frame_stop_to_sp_max(_s):
     #     """Loop through sps and set max to frame_stop"""

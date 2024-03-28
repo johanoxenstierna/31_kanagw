@@ -18,7 +18,7 @@ FPS = 40
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=FPS, bitrate=3600)
 
-fig, ax_b = plt.subplots(figsize=(10, 6), frameon=False)
+fig, ax_b = plt.subplots(figsize=(6, 3), frameon=False)
 fig.subplots_adjust(bottom = 0)
 fig.subplots_adjust(top = 1)
 fig.subplots_adjust(right = 1)

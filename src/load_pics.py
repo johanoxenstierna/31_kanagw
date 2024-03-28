@@ -13,7 +13,7 @@ def load_pics():
     pics['O0'] = {}
 
     if P.MAP_DIMS[0] == 1280:
-        pics['backgr'] = imread('./pictures/backgr.png')  # 482, 187
+        pics['backgr'] = imread('./pictures/backgr_b.png')  # 482, 187
         pics['backgr'] = np.flipud(pics['backgr'])
     elif P.MAP_DIMS[0] == 2560:
         pics['backgr_d'] = imread('./pictures/backgr_L.png')

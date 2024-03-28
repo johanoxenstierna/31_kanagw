@@ -27,12 +27,14 @@ class Waves_info:
         This means that direction vector d needs to be tuned TOGETHER with it. 
         This shear can probably be removed if the image from which point pngs are taken is sheared instead. 
         '''
-        _s.o1_left_x = np.linspace(0, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
-        _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
-        _s.o1_down_z = np.linspace(-50, 140, num=P.NUM_Z)
+        # _s.o1_left_x = np.linspace(0, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
+        _s.o1_left_x = np.linspace(100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
+        _s.o1_left_z = np.linspace(400, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
+        # _s.o1_down_z = np.linspace(-50, 100, num=P.NUM_Z)
+        _s.o1_down_z = np.linspace(100, 300, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
         # _s.o1_steepnessess_z = np.linspace(0.9, 0.9, num=P.NUM_Z)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.o1_steepnessess_x = np.linspace(0.3, 1, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        _s.stns_x = np.linspace(1.3, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
+        _s.stns_x = np.linspace(1.3, 1.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.stns_t = np.linspace(0.0, 1.0, num=P.FRAMES_STOP)
 
         # NEEDS TO BE ALIGNED WITH X TOO
@@ -51,7 +53,7 @@ class Waves_info:
             'init_frames': None,
             'frames_tot': P.FRAMES_STOP - 25,
             'frame_ss': None,
-            'ld': [0, 100],  # x z !!!
+            'ld': [None, None],  # x z !!!
             'left_offsets': None,
             'zorder': 5
         }

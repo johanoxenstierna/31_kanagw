@@ -28,7 +28,7 @@ for t in range(100):  # Adjust the number of frames as needed
     # Apply the wave effect to the water area
     animated_image[water_area:, :] = np.roll(animated_image[water_area:, :], int(wave), axis=0)
 
-    # Write the frame to the video
+    # Write the frame to the video # jjj t
     out.write(animated_image)
 
     # Display the animated image (optional)
