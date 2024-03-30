@@ -57,18 +57,26 @@ class GenObjects:
         that is shown needs to be explainable through the generated waves.
         """
 
-        # d = 20  # diameter
-        STARTING_Z = 590  # MOVING DOWN. USING k0
+        '''THESE ARE TEMPORARY. REMOVE WHEN PADDING SORTED'''
+        START_Z = 590  # MOVING DOWN. USING k0
+        STOP_Z = 650
 
         '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
         inds_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
-        inds_z = np.linspace(start=STARTING_Z, stop=650, num=P.NUM_Z, dtype=int)
+        inds_z = np.linspace(start=START_Z, stop=STOP_Z, num=P.NUM_Z, dtype=int)
 
         k0 = imread('./pictures/k0.png')
 
-        d = int(2000 / P.NUM_X)
+        d = 0
+        if P.COMPLEXITY == 0:
+            d = int(1000 / P.NUM_X)
+        elif P.COMPLEXITY == 1:
+            d = int(1500 / P.NUM_X)
+
         if d % 2 != 0:
             d += 1
+            if d > 720 - STOP_Z:
+                raise Exception("d too large")
 
         prep_k0.cut_k0(k0, inds_x, inds_z, d)
         c_, d_ = prep_k0.get_c_d(k0, d)
@@ -91,9 +99,11 @@ class GenObjects:
                 type = 'static'
                 file_name = str(ind_x) + '_' + str(ind_z) + '.npy'
                 id_static = str(i) + '_' + str(j) + '_' + type
-                # pic_static = np.load('./pictures/k0_cut/' + file_name)
-                # pic_static = _s.pics['O0']['waves']['O1']['d']
-                pic_static = imread('./pictures/waves/O1/d.png')
+                if P.COMPLEXITY == 0:
+                    # pic_static = _s.pics['O0']['waves']['O1']['d']
+                    pic_static = imread('./pictures/waves/O1/d.png')
+                elif P.COMPLEXITY == 1:
+                    pic_static = np.load('./pictures/k0_cut/' + file_name)
                 o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
                 o1.gen_static()
                 O0['waves'].O1[id_static] = o1
@@ -104,15 +114,15 @@ class GenObjects:
 
                 # type = 'f_b'
                 # id_f_b = str(i) + '_' + str(j) + '_' + type
-                # o1f_b = O1C(o1_id=id_f_b, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                # o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
                 # o1f_b.gen_b(o1)
                 # O0['waves'].O1[id_f_b] = o1f_b
-
-                type = 'f_f'
-                id_f_f = str(i) + '_' + str(j) + '_' + type
-                o1f_f = O1C(o1_id=id_f_f, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1f_f.gen_f(o1)
-                O0['waves'].O1[id_f_f] = o1f_f
+                #
+                # type = 'f_f'
+                # id_f_f = str(i) + '_' + str(j) + '_' + type
+                # o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                # o1f_f.gen_f(o1)
+                # O0['waves'].O1[id_f_f] = o1f_f
 
                 adf = 5
 

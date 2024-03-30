@@ -3,10 +3,14 @@
 import copy
 
 # from sh_info.shInfoAbstract import ShInfoAbstract
+# import scipy.stats
+from scipy.stats import beta, gamma
+from src.trig_functions import min_max_normalization
+
 import P as P
 import random
 import numpy as np
-from scipy import stats
+
 
 class Waves_info:
     """
@@ -29,13 +33,33 @@ class Waves_info:
         '''
         # _s.o1_left_x = np.linspace(0, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_x = np.linspace(100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
-        _s.o1_left_z = np.linspace(400, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
+        _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
         # _s.o1_down_z = np.linspace(-50, 100, num=P.NUM_Z)
         _s.o1_down_z = np.linspace(100, 300, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
         # _s.o1_steepnessess_z = np.linspace(0.9, 0.9, num=P.NUM_Z)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.o1_steepnessess_x = np.linspace(0.3, 1, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        _s.stns_x = np.linspace(1.3, 1.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
+        _s.stns_x = np.linspace(1.5, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
+        _s.stns_x = np.geomspace(start=2, stop=0.1)
+
+        '''TODO: THESE SHOULD BE BETA DISTS'''
+        _s.stns_zx = np.zeros(shape=(P.NUM_Z, P.NUM_X))
+
+        stns_z = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=1, loc=0)  # INCREASES WITH ROWS
+        stns_z = min_max_normalization(stns_z, y_range=[0.2, 1.5])
+
+        stns_x = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
+        stns_x = min_max_normalization(stns_x, y_range=[0.2, 0.5])
+
+        for i in range(P.NUM_Z):
+            for j in range(P.NUM_X):
+                stn_z = stns_z[i]
+                stn_x = stns_x[j]
+                # stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                _s.stns_zx[i, j] = stn_zx
+
         # _s.stns_t = np.linspace(0.0, 1.0, num=P.FRAMES_STOP)
+        _s.distance_mult = np.linspace(1, 0.2, num=P.NUM_Z)  # DECREASES WITH ROWS
 
         # NEEDS TO BE ALIGNED WITH X TOO
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff

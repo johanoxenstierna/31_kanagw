@@ -2,6 +2,8 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
+
+import P
 from src.trig_functions import min_max_normalization
 import random
 import scipy
@@ -36,20 +38,34 @@ def gerstner_waves(gi):
 	# rotation = np.zeros((frames_tot,))
 	# stns_t = np.linspace(0.99, 0.2, num=frames_tot)
 
-	'''Only for wave 2'''
-	stns_t = np.log(np.linspace(start=1.0, stop=20, num=frames_tot))
+	'''Only for wave 2. 
+	TODO: stns_t affects whole wave in the same way. Only way to get the big one is by 
+	using zx mesh. The mesh is just a heatmap that should reflect the reef.'''
+	# stns_t = np.log(np.linspace(start=1.0, stop=5, num=frames_tot))
 	beta_pdf = beta.pdf(x=np.linspace(0, 1, frames_tot), a=10, b=50, loc=0)
-	stns_t = min_max_normalization(beta_pdf, y_range=[0, 1])
-	'''Shifting is irrelevant here, because its done in o2 finish_info'''
+	stns_t = min_max_normalization(beta_pdf, y_range=[0, 4])
+
 	x = gi['ld'][0]
 	z = gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	for w in range(0, 1):  # NUM WAVES
+	N = 0
+	if P.COMPLEXITY == 0:
+		N = 2
+	elif P.COMPLEXITY == 1:
+		N = 3
+
+	for w in range(0, N):  # NUM WAVES
+
+		'''
+		When lam is high it means that k is low, 
+		When k is low it means stn is high. 
+		stn is the multiplier for y 
+		'''
 
 		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
-			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([1, 0.0])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.1  # 0.1 prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
+			d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
+			c = 0.1  # [0.1, 0.05] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			lam = 300
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
@@ -58,15 +74,15 @@ def gerstner_waves(gi):
 			# steepness_abs = 1.0
 		elif w == 1:
 			d = np.array([0.2, -0.6])
-			c = -0.03  # 0.003
-			lam = 1000
+			c = -0.06  # [-0.03, -0.015]
+			lam = 800
 			k = 2 * np.pi / lam
-			stn0 = None
+			stn = 0
 			# steepness_abs = 1
 		elif w == 2:
 			d = np.array([-0.2, -0.6])
-			c = 0.3  # from 0.6 -> 0.06
-			lam = 50
+			c = 0.08  # [0.06, 0.03]
+			lam = 100
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
 			stn = 0.99 / k
@@ -74,14 +90,14 @@ def gerstner_waves(gi):
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
 			if w == 1:
-				stn = (0.01 * stn_particle + 0.99 * stns_t[i]) / k
+				stn = (stn_particle + stns_t[i]) / k
 
 			# stn = stns_t[i]
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
 
-			if w != 2:
+			if w != 2:  # SMALL ONES MOVE LEFT
 				xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
-			elif w == 2:
+			elif w == 2:  # small ones
 				xy[i, 0] -= stn * np.cos(y)
 
 			xy[i, 1] += stn * np.sin(y)
@@ -107,7 +123,7 @@ def gerstner_waves(gi):
 
 	'''NEED TO SHIFT BY LEFT START SOMEHOW'''
 	peaks = scipy.signal.find_peaks(xy[:, 1])[0]
-	alphas = np.full(shape=(len(xy),), fill_value=0.3)
+	alphas = np.full(shape=(len(xy),), fill_value=0.5)
 
 	peaks_pos_y = []  # crest
 	for i in range(len(peaks)):
@@ -123,8 +139,8 @@ def gerstner_waves(gi):
 		# alphas[pk_ind0:pk_ind1 + num]
 
 		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.3, 1])
-		# alphas[start:start + num] = alpha_mask
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.5, 1])
+		alphas[start:start + num] = alpha_mask
 
 
 	adf = 6
@@ -133,11 +149,15 @@ def gerstner_waves(gi):
 	# alphas = dxy[:, 1]
 	# alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
 
-	# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
-	# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
-	rotation = np.zeros(shape=(len(xy),))
+	#
 
-	return xy, dxy, alphas, rotation
+	if P.COMPLEXITY == 0:
+		rotation = np.zeros(shape=(len(xy),))
+	elif P.COMPLEXITY == 1:
+		rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
+		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
+
+	return xy, dxy, alphas, rotation, peaks
 
 
 def foam_b(o1, peak_inds):
@@ -155,7 +175,7 @@ def foam_b(o1, peak_inds):
 
 		num = int((peak_ind1 - peak_ind0) / 2)  # num is HALF
 
-		start = int(peak_ind0 + 0.8 * num)
+		start = int(peak_ind0 + 0.2 * num)
 
 		# mult_x = - beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
 		# mult_x = min_max_normalization(mult_x, y_range=[0.2, 1])
@@ -167,8 +187,8 @@ def foam_b(o1, peak_inds):
 		# xy_t[start:start + num, 0] *= mult_x
 		# xy_t[start:start + num, 1] *= mult_y
 
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.99])
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=3, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.8])
 
 		alphas[start:start + num] = alpha_mask
 
@@ -255,23 +275,25 @@ def foam_f(o1, peak_inds):
 		peak_ind1 = peak_inds[i + 1]
 
 		num = int((peak_ind1 - peak_ind0) / 2)
-		start = int(peak_ind0 + 0 * num)
+		start = int(peak_ind0 + 0.0 * num)
 
-		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		mult_x = min_max_normalization(mult_x, y_range=[1, 1])
+		'''scaling'''
+		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=1.5, b=1.5, loc=0)
+		mult_x = min_max_normalization(mult_x, y_range=[1, 2])
 
-		mult_y = -beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		mult_y = min_max_normalization(mult_y, y_range=[1, 1])
+		mult_y = -beta.pdf(x=np.linspace(0, 1, num), a=1.5, b=1.5, loc=0)
+		mult_y = min_max_normalization(mult_y, y_range=[0.5, 1])
 
-		# xy_t[start:start + num, 0] *= mult_x
+		xy_t[start:start + num, 0] *= mult_x
 		#
 		# # aa = xy_t[start:start + num, 0]
 		# # bb = o1.xy_t[start:start + num, 0]
 		# aa = np.copy(xy_t)
-		# xy_t[start:start + num, 1] *= mult_y
 
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.99])
+		xy_t[start:start + num, 1] *= mult_y
+
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=4, b=20, loc=0)
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.0, 0.99])
 
 		alphas[start:start + num] = alpha_mask
 

@@ -40,7 +40,10 @@ def cut_k0(k0, inds_x, inds_z, d=None):
             pic = k0[ind_z + int(d/2):ind_z - int(d/2):-1, ind_x - int(d/2):ind_x + int(d/2), :]
 
             # alpha = pic[:, :, 3] * mask  # ???
-            pic[:, :, 3] = mask
+            try:
+                pic[:, :, 3] = mask
+            except:
+                adf = 5
 
             pic_key = str(ind_x) + '_' + str(ind_z)
             np.save(PATH_OUT + pic_key, pic)

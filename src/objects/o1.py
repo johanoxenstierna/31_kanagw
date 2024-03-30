@@ -17,6 +17,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.id_s = o1_id.split('_')
         _s.x_key = int(_s.id_s[0])
         _s.z_key = int(_s.id_s[1])
+
         _s.zorder = 100 + _s.z_key + _s.x_key  # needs x key as well
 
         _s.o0 = o0  # parent
@@ -38,10 +39,14 @@ class O1C(AbstractObject, AbstractSSS):
 
         _s.gi['ld'][0] = _s.o0.gi.o1_left_x[_s.x_key] + _s.o0.gi.o1_left_z[_s.z_key]  # last one is shear! probably removed later
         _s.gi['ld'][1] = _s.o0.gi.o1_down_z[_s.z_key]
-        # _s.gi['ld'][0] += random.randint(-5, 5)
-        # _s.gi['ld'][1] += random.randint(-5, 5)
+
+        if P.COMPLEXITY == 0:
+            pass
+        elif P.COMPLEXITY == 1:
+            _s.gi['ld'][0] += random.randint(-5, 5)
+            _s.gi['ld'][1] += random.randint(-5, 5)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
-        _s.gi['steepness'] = _s.o0.gi.stns_x[_s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
+        _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
 
     def gen_scale_vector(_s):
@@ -61,12 +66,13 @@ class O1C(AbstractObject, AbstractSSS):
         '''NEXT: add rotation here'''
 
         _s.xy_t, _s.dxy, \
-        _s.alphas, _s.rotation = gerstner_waves(gi=_s.gi)
+        _s.alphas, _s.rotation, _s.peaks = gerstner_waves(gi=_s.gi)
         # _s.alphas = np.zeros(shape=(_s.gi['frames_tot']))
         # _s.xy[:, 1] *= -1  # flip it.
 
         '''shifting '''
         _s.xy = np.copy(_s.xy_t)
+        _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
 
@@ -88,7 +94,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
         peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
-        peaks_inds -= 30
+        peaks_inds -= 5
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
             peaks_inds[neg_inds] = 0
@@ -97,6 +103,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.zorder += 5   # Potentially this will need to be changed dynamically
 
         _s.xy = np.copy(_s.xy_t)
+        _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
         _s.xy[:, 1] += 5
@@ -109,11 +116,12 @@ class O1C(AbstractObject, AbstractSSS):
         '''indicies where y-tangent is at max'''
         # aa = np.where(o1.dxy[:, 1] > )
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
-        # peaks_inds -= 5
-        # neg_inds = np.where(peaks_inds < 0)[0]
-        # if len(neg_inds) > 0:
-        #     peaks_inds[neg_inds] = 0
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=20, distance=50)[0]
+        peaks_inds -= 5
+        neg_inds = np.where(peaks_inds < 0)[0]
+        if len(neg_inds) > 0:
+            peaks_inds[neg_inds] = 0
+
         # if len(peaks_inds) < 1:
         #     _s.gi['init_frames'] = [3]
         #     _s.gi['frames_tot'] = 2
@@ -129,6 +137,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.zorder += 20
 
         _s.xy = np.copy(_s.xy_t)
+        _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
         # _s.xy[:, 1] += 10

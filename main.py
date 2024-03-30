@@ -16,13 +16,13 @@ WRITE = 0
 FPS = 40
 
 Writer = animation.writers['ffmpeg']
-writer = Writer(fps=FPS, bitrate=3600)
+writer = Writer(fps=FPS, bitrate=3600)  #, extra_args=['-vcodec', 'h264_nvenc'])
 
 fig, ax_b = plt.subplots(figsize=(6, 3), frameon=False)
-fig.subplots_adjust(bottom = 0)
-fig.subplots_adjust(top = 1)
-fig.subplots_adjust(right = 1)
-fig.subplots_adjust(left = 0)
+fig.subplots_adjust(bottom=0)
+fig.subplots_adjust(top=1)
+fig.subplots_adjust(right=1)
+fig.subplots_adjust(left=0)
 
 axs0 = []
 axs1 = []
