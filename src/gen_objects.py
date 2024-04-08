@@ -71,7 +71,8 @@ class GenObjects:
         if P.COMPLEXITY == 0:
             d = int(1000 / P.NUM_X)
         elif P.COMPLEXITY == 1:
-            d = int(2000 / P.NUM_X)  # OBS check against alpha.
+            d = int(1200 / P.NUM_X)  # OBS check against alpha.
+        print("DIAMETER: " + str(d))
 
         if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1

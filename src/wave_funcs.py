@@ -35,7 +35,7 @@ def gerstner_waves(o1, o0):
 
 	xy = np.zeros((frames_tot, 2))  # this is for the final image, which is 2D!
 	dxy = np.zeros((frames_tot, 2))
-	# rotation = np.zeros((frames_tot,))
+	rotation = np.zeros((frames_tot,))
 	# stns_t = np.linspace(0.99, 0.2, num=frames_tot)
 
 	'''Only for wave 2. 
@@ -48,13 +48,16 @@ def gerstner_waves(o1, o0):
 	x = o1.gi['ld'][0]
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	N = 0
-	if P.COMPLEXITY == 0:
-		N = 3
-	elif P.COMPLEXITY == 1:
-		N = 3
+	SS = [0, 1, 2]
+	# SS = [0]
+	# SS = [1]
+	# SS = [1, 2]
+	# if P.COMPLEXITY == 0:
+	# 	SS = [0, 3]
+	# elif P.COMPLEXITY == 1:
+	# 	SS = [0, 3]
 
-	for w in range(0, N):  # NUM WAVES
+	for w in SS:  # NUM WAVES
 
 		'''
 		When lam is high it means that k is low, 
@@ -65,7 +68,8 @@ def gerstner_waves(o1, o0):
 		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.05  # [0.1, 0.05] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
+			c = 0.1  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			lam = 300
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
@@ -74,9 +78,9 @@ def gerstner_waves(o1, o0):
 			stn = stn_particle / k
 			# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
-			d = np.array([0.5, -0.5])
+			d = np.array([0.8, -0.2])
 			# c = 0.1  # [-0.03, -0.015] ?????
-			c = 0.05  # [0.1, 0.05]
+			c = 0.1  # [0.1, 0.02]
 			lam = 1200  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
@@ -85,7 +89,7 @@ def gerstner_waves(o1, o0):
 		elif w == 2:
 			d = np.array([-0.2, -0.6])
 			# c = 0.1  # [0.06, 0.03]
-			c = 0.05  # [0.1, 0.05]
+			c = 0.1  # [0.1, 0.02]
 			lam = 100
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
@@ -113,6 +117,9 @@ def gerstner_waves(o1, o0):
 			dxy[i, 0] += 1 - stn * np.sin(y)  # mirrored! Either x or y needs to be flipped
 			dxy[i, 1] += stn * np.cos(y)
 			# dxy[i, 2] += (stn * np.cos(y)) / (1 - stn * np.sin(y))  # gradient: not very useful cuz it gets inf at extremes
+
+			if w in [0, 1]:  # MIGHT NEED SHIFTING
+				rotation[i] += dxy[i, 1]
 
 	dxy[:, 0] = -dxy[:, 0]
 	dxy[:, 1] = -dxy[:, 1]
@@ -157,9 +164,15 @@ def gerstner_waves(o1, o0):
 	if P.COMPLEXITY == 0:
 		rotation = np.zeros(shape=(len(xy),))
 	elif P.COMPLEXITY == 1:
-		rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
+		'''T&R More neg values mean more counterclockwise'''
+		if SS[0] == 2 and SS[1] == 3:
+			pass
+		else:
+			rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
+		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
 		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
-
+		# rotation = min_max_normalization(rotation, y_range=[-0.5 * np.pi, 0.5 * np.pi])
+		# pass
 	return xy, dxy, alphas, rotation, peaks
 
 
@@ -178,7 +191,7 @@ def foam_b(o1, peak_inds):
 
 		num = int((peak_ind1 - peak_ind0) / 2)  # num is HALF
 
-		start = int(peak_ind0 + 0.2 * num)
+		start = int(peak_ind0 + 0.1 * num)
 
 		# mult_x = - beta.pdf(x=np.linspace(0, 1, num), a=2, b=5, loc=0)
 		# mult_x = min_max_normalization(mult_x, y_range=[0.2, 1])
@@ -190,7 +203,7 @@ def foam_b(o1, peak_inds):
 		# xy_t[start:start + num, 0] *= mult_x
 		# xy_t[start:start + num, 1] *= mult_y
 
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=3, loc=0)
+		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=4, loc=0)
 		alpha_mask = min_max_normalization(alpha_mask, y_range=[0, 0.8])
 
 		alphas[start:start + num] = alpha_mask

@@ -43,8 +43,8 @@ class O1C(AbstractObject, AbstractSSS):
         if P.COMPLEXITY == 0:
             pass
         elif P.COMPLEXITY == 1:
-            _s.gi['ld'][0] += random.randint(-5, 5)
-            _s.gi['ld'][1] += random.randint(-5, 5)
+            _s.gi['ld'][0] += random.randint(-15, 15)
+            _s.gi['ld'][1] += random.randint(-10, 10)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
         # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
@@ -93,7 +93,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.rotation = np.zeros((len(o1.xy),))
         _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=25, distance=50)[0]
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=15, distance=50)[0]
         peaks_inds -= 5
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:

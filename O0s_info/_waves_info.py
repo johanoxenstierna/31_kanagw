@@ -32,10 +32,10 @@ class Waves_info:
         This shear can probably be removed if the image from which point pngs are taken is sheared instead. 
         '''
         # _s.o1_left_x = np.linspace(0, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
-        _s.o1_left_x = np.linspace(100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
+        _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
         # _s.o1_down_z = np.linspace(-50, 100, num=P.NUM_Z)
-        _s.o1_down_z = np.linspace(100, 300, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
         # _s.o1_steepnessess_z = np.linspace(0.9, 0.9, num=P.NUM_Z)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.o1_steepnessess_x = np.linspace(0.3, 1, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.stns_x = np.linspace(1.5, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
@@ -46,7 +46,7 @@ class Waves_info:
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 3])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 1])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
 
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
         stns_x0 = min_max_normalization(stns_x0, y_range=[0.2, 0.5])
@@ -70,7 +70,7 @@ class Waves_info:
                 _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  '''
-        _s.distance_mult = np.linspace(1, 0.5, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
+        _s.distance_mult = np.linspace(1, 0.3, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
 
         # NEEDS TO BE ALIGNED WITH X TOO
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff
