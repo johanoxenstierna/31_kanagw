@@ -71,9 +71,9 @@ class GenObjects:
         if P.COMPLEXITY == 0:
             d = int(1000 / P.NUM_X)
         elif P.COMPLEXITY == 1:
-            d = int(1500 / P.NUM_X)
+            d = int(2000 / P.NUM_X)  # OBS check against alpha.
 
-        if d % 2 != 0:
+        if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1
             if d > 720 - STOP_Z:
                 raise Exception("d too large")
@@ -112,17 +112,17 @@ class GenObjects:
                 b=foam moving backwards, f=forwards
                 Obs they need to have a lifetime linked with wave-periods. '''
 
-                # type = 'f_b'
-                # id_f_b = str(i) + '_' + str(j) + '_' + type
-                # o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                # o1f_b.gen_b(o1)
-                # O0['waves'].O1[id_f_b] = o1f_b
-                #
-                # type = 'f_f'
-                # id_f_f = str(i) + '_' + str(j) + '_' + type
-                # o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                # o1f_f.gen_f(o1)
-                # O0['waves'].O1[id_f_f] = o1f_f
+                type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
+                id_f_b = str(i) + '_' + str(j) + '_' + type
+                o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1f_b.gen_b(o1)
+                O0['waves'].O1[id_f_b] = o1f_b
+
+                type = 'f_f'
+                id_f_f = str(i) + '_' + str(j) + '_' + type
+                o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1f_f.gen_f(o1)
+                O0['waves'].O1[id_f_f] = o1f_f
 
                 adf = 5
 

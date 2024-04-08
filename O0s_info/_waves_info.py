@@ -38,28 +38,39 @@ class Waves_info:
         _s.o1_down_z = np.linspace(100, 300, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
         # _s.o1_steepnessess_z = np.linspace(0.9, 0.9, num=P.NUM_Z)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
         # _s.o1_steepnessess_x = np.linspace(0.3, 1, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        _s.stns_x = np.linspace(1.5, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        _s.stns_x = np.geomspace(start=2, stop=0.1)
+        # _s.stns_x = np.linspace(1.5, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
+        # _s.stns_x = np.geomspace(start=2, stop=0.1)
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
-        _s.stns_zx = np.zeros(shape=(P.NUM_Z, P.NUM_X))
+        _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
+        _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
-        stns_z = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=1, loc=0)  # INCREASES WITH ROWS
-        stns_z = min_max_normalization(stns_z, y_range=[0.2, 1.5])
+        stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
+        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 3])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
 
-        stns_x = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
-        stns_x = min_max_normalization(stns_x, y_range=[0.2, 0.5])
+        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.2, 0.5])
+
+        stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=1, loc=0)  # a>b BIGGEST FURTHEST AWAY
+        stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+
+        stns_x1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
+        stns_x1 = min_max_normalization(stns_x1, y_range=[0.2, 0.5])
 
         for i in range(P.NUM_Z):
             for j in range(P.NUM_X):
-                stn_z = stns_z[i]
-                stn_x = stns_x[j]
-                # stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                stn_z = stns_z0[i]
+                stn_x = stns_x0[j]
                 stn_zx = 0.5 * stn_z + 0.5 * stn_x
-                _s.stns_zx[i, j] = stn_zx
+                _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
 
-        # _s.stns_t = np.linspace(0.0, 1.0, num=P.FRAMES_STOP)
-        _s.distance_mult = np.linspace(1, 0.2, num=P.NUM_Z)  # DECREASES WITH ROWS
+                stn_z = stns_z1[i]
+                stn_x = stns_x1[j]
+                stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
+
+        '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  '''
+        _s.distance_mult = np.linspace(1, 0.5, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
 
         # NEEDS TO BE ALIGNED WITH X TOO
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff

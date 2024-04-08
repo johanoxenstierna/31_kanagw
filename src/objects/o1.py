@@ -23,8 +23,8 @@ class O1C(AbstractObject, AbstractSSS):
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
         _s.type = type
-        _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!
-        # _s.temp = random.randint(5, 10000)
+        _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
+        # ONLY OBJECTS THAT ARE MUTABLE ARE TO BE COPIED
 
         AbstractSSS.__init__(_s, o0, o1_id)
 
@@ -46,7 +46,7 @@ class O1C(AbstractObject, AbstractSSS):
             _s.gi['ld'][0] += random.randint(-5, 5)
             _s.gi['ld'][1] += random.randint(-5, 5)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
-        _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
+        # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
 
     def gen_scale_vector(_s):
@@ -66,7 +66,7 @@ class O1C(AbstractObject, AbstractSSS):
         '''NEXT: add rotation here'''
 
         _s.xy_t, _s.dxy, \
-        _s.alphas, _s.rotation, _s.peaks = gerstner_waves(gi=_s.gi)
+        _s.alphas, _s.rotation, _s.peaks = gerstner_waves(o1=_s, o0=_s.o0)
         # _s.alphas = np.zeros(shape=(_s.gi['frames_tot']))
         # _s.xy[:, 1] *= -1  # flip it.
 

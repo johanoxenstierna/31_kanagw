@@ -10,7 +10,7 @@ import scipy
 from scipy.stats import beta, gamma
 
 
-def gerstner_waves(gi):
+def gerstner_waves(o1, o0):
 
 	"""
 	Per particle!
@@ -25,11 +25,11 @@ def gerstner_waves(gi):
 
 	# c = 0.5
 	# c = -np.sqrt(9.8 / k)
-	stn_particle = gi['steepness']
+	# stn_particle = gi['steepness']  # need beta dists over zx mesh
 
 	# left_start = gi['o1_left_start']
 
-	frames_tot = gi['frames_tot']
+	frames_tot = o1.gi['frames_tot']
 
 	d = np.array([1, 1])
 
@@ -43,14 +43,14 @@ def gerstner_waves(gi):
 	using zx mesh. The mesh is just a heatmap that should reflect the reef.'''
 	# stns_t = np.log(np.linspace(start=1.0, stop=5, num=frames_tot))
 	beta_pdf = beta.pdf(x=np.linspace(0, 1, frames_tot), a=10, b=50, loc=0)
-	stns_t = min_max_normalization(beta_pdf, y_range=[0, 4])
+	stns_t = min_max_normalization(beta_pdf, y_range=[0, 1.7])  # OBS when added = interference
 
-	x = gi['ld'][0]
-	z = gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
+	x = o1.gi['ld'][0]
+	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
 	N = 0
 	if P.COMPLEXITY == 0:
-		N = 2
+		N = 3
 	elif P.COMPLEXITY == 1:
 		N = 3
 
@@ -63,25 +63,29 @@ def gerstner_waves(gi):
 		'''
 
 		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
-			# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-			d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.1  # [0.1, 0.05] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
+			c = 0.05  # [0.1, 0.05] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			lam = 300
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
 			# stn_particle = 0.01
+			stn_particle = o0.gi.stns_zx0[o1.z_key, o1.x_key]
 			stn = stn_particle / k
 			# steepness_abs = 1.0
-		elif w == 1:
-			d = np.array([0.2, -0.6])
-			c = -0.06  # [-0.03, -0.015]
-			lam = 800
+		elif w == 1:  # BIG ONE
+			d = np.array([0.5, -0.5])
+			# c = 0.1  # [-0.03, -0.015] ?????
+			c = 0.05  # [0.1, 0.05]
+			lam = 1200  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
-			stn = 0
+			stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
+			stn = None
 			# steepness_abs = 1
 		elif w == 2:
 			d = np.array([-0.2, -0.6])
-			c = 0.08  # [0.06, 0.03]
+			# c = 0.1  # [0.06, 0.03]
+			c = 0.05  # [0.1, 0.05]
 			lam = 100
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
@@ -90,9 +94,9 @@ def gerstner_waves(gi):
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
 			if w == 1:
-				stn = (stn_particle + stns_t[i]) / k
+				stn = (0.5 * stn_particle + 0.5 * stns_t[i]) / k
+				# stn = stn_particle / k
 
-			# stn = stns_t[i]
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
 
 			if w != 2:  # SMALL ONES MOVE LEFT
@@ -141,7 +145,6 @@ def gerstner_waves(gi):
 		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
 		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.5, 1])
 		alphas[start:start + num] = alpha_mask
-
 
 	adf = 6
 
