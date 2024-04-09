@@ -71,8 +71,8 @@ class GenObjects:
         if P.COMPLEXITY == 0:
             d = int(1000 / P.NUM_X)
         elif P.COMPLEXITY == 1:
-            d = int(1200 / P.NUM_X)  # OBS check against alpha.
-        print("DIAMETER: " + str(d))
+            d = int(2000 / P.NUM_X)  # OBS check against alpha.
+        # print("DIAMETER: " + str(d))
 
         if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1
@@ -81,6 +81,7 @@ class GenObjects:
 
         prep_k0.cut_k0(k0, inds_x, inds_z, d)
         c_, d_ = prep_k0.get_c_d(k0, d)
+        print("DIAMETER: " + str(d))
 
         # k0 = _s.pics['k0']
 
@@ -119,7 +120,7 @@ class GenObjects:
                 o1f_b.gen_b(o1)
                 O0['waves'].O1[id_f_b] = o1f_b
 
-                type = 'f_f'
+                type = 'f_f'  # NOT USED FOR SMALL ONES
                 id_f_f = str(i) + '_' + str(j) + '_' + type
                 o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
                 o1f_f.gen_f(o1)

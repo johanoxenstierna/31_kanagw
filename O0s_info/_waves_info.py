@@ -5,6 +5,7 @@ import copy
 # from sh_info.shInfoAbstract import ShInfoAbstract
 # import scipy.stats
 from scipy.stats import beta, gamma
+import scipy
 from src.trig_functions import min_max_normalization
 
 import P as P
@@ -50,12 +51,18 @@ class Waves_info:
 
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
         stns_x0 = min_max_normalization(stns_x0, y_range=[0.2, 0.5])
+        peak = scipy.signal.find_peaks(stns_x0)[0][0]
+        # num = int(0.3 * P.NUM_X)
+        stns_x0[peak:] *= np.geomspace(start=1, stop=0.1, num=P.NUM_X - peak)
 
         stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=1, loc=0)  # a>b BIGGEST FURTHEST AWAY
         stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
 
-        stns_x1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
-        stns_x1 = min_max_normalization(stns_x1, y_range=[0.2, 0.5])
+        stns_x1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
+        stns_x1 = min_max_normalization(stns_x1, y_range=[0.2, 1.5])
+        peak = scipy.signal.find_peaks(stns_x1)[0][0]
+        # num = int(0.3 * P.NUM_X)
+        stns_x1[peak:] *= np.geomspace(start=1, stop=0.1, num=P.NUM_X - peak)
 
         for i in range(P.NUM_Z):
             for j in range(P.NUM_X):

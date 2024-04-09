@@ -93,8 +93,8 @@ class O1C(AbstractObject, AbstractSSS):
         _s.rotation = np.zeros((len(o1.xy),))
         _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=15, distance=50)[0]
-        peaks_inds -= 5
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=3, distance=40)[0]  # OBS height needs tuning!!!
+        peaks_inds -= 5  # EXPLAIN
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
             peaks_inds[neg_inds] = 0
@@ -116,7 +116,7 @@ class O1C(AbstractObject, AbstractSSS):
         '''indicies where y-tangent is at max'''
         # aa = np.where(o1.dxy[:, 1] > )
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=20, distance=50)[0]
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
         peaks_inds -= 5
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
