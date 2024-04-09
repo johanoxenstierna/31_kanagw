@@ -58,21 +58,26 @@ class GenObjects:
         """
 
         '''THESE ARE TEMPORARY. REMOVE WHEN PADDING SORTED'''
-        START_Z = 590  # MOVING DOWN. USING k0
-        STOP_Z = 650
+        # START_Z = 500  # MOVING DOWN. USING k0
+        # STOP_Z = 650  # this plus half diameter
+
+        START_Z = 26  # MOVING DOWN. USING k0
+        STOP_Z = 200  # this plus half diameter
 
         '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
         inds_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
         inds_z = np.linspace(start=START_Z, stop=STOP_Z, num=P.NUM_Z, dtype=int)
 
         k0 = imread('./pictures/k0.png')
+        k0 = np.flipud(k0)  # essential
 
         d = 0
         if P.COMPLEXITY == 0:
-            d = int(1000 / P.NUM_X)
+            d = int(800 / P.NUM_X)
         elif P.COMPLEXITY == 1:
-            d = int(2000 / P.NUM_X)  # OBS check against alpha.
-        # print("DIAMETER: " + str(d))
+            d = int(1400 / P.NUM_X)  # OBS check against alpha.
+
+        # d = 30
 
         if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1
@@ -82,16 +87,6 @@ class GenObjects:
         prep_k0.cut_k0(k0, inds_x, inds_z, d)
         c_, d_ = prep_k0.get_c_d(k0, d)
         print("DIAMETER: " + str(d))
-
-        # k0 = _s.pics['k0']
-
-        # w, h = 20, 20  # width, height
-
-        # a = _s.pics['O0']['waves']['O1']['a']
-        # b = _s.pics['O0']['waves']['O1']['b']
-        # c = _s.pics['O0']['waves']['O1']['c']
-        # d = _s.pics['O0']['waves']['O1']['d']
-        # d = k0[0:20, 0:20, :]
 
         for i in range(len(inds_x)):
             for j in range(len(inds_z)):

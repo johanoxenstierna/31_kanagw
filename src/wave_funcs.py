@@ -34,6 +34,7 @@ def gerstner_waves(o1, o0):
 	d = np.array([1, 1])
 
 	xy = np.zeros((frames_tot, 2))  # this is for the final image, which is 2D!
+	y_only_2 = np.zeros((frames_tot,))
 	dxy = np.zeros((frames_tot, 2))
 	rotation = np.zeros((frames_tot,))
 	# stns_t = np.linspace(0.99, 0.2, num=frames_tot)
@@ -52,7 +53,7 @@ def gerstner_waves(o1, o0):
 	# SS = [0]
 	# SS = [2]
 	# SS = [1]
-	# SS = [2]
+	# SS = [0, 2]
 	# if P.COMPLEXITY == 0:
 	# 	SS = [0, 3]
 	# elif P.COMPLEXITY == 1:
@@ -71,6 +72,8 @@ def gerstner_waves(o1, o0):
 			# d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
 			c = 0.1  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			if P.COMPLEXITY == 1:
+				c = 0.02
 			lam = 200
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
@@ -83,6 +86,8 @@ def gerstner_waves(o1, o0):
 			# d = np.array([0.9, -0.1])
 			# c = 0.1  # [-0.03, -0.015] ?????
 			c = 0.1  # [0.1, 0.02]
+			if P.COMPLEXITY == 1:
+				c = 0.02
 			lam = 1200  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
@@ -92,15 +97,17 @@ def gerstner_waves(o1, o0):
 			d = np.array([-0.2, -0.7])
 			# c = 0.1  # [0.06, 0.03]
 			c = 0.1  # [0.1, 0.02]
+			if P.COMPLEXITY == 1:
+				c = 0.02
 			lam = 80
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
-			stn = 0.99 / k
+			stn = 1 / k
 
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
 			if w == 1:
-				stn = (0.5 * stn_particle + 0.5 * stns_t[i]) / k
+				stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
 				# stn = stn_particle / k
 
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
@@ -111,6 +118,8 @@ def gerstner_waves(o1, o0):
 				xy[i, 0] -= stn * np.cos(y)
 
 			xy[i, 1] += stn * np.sin(y)
+			if w == 2:
+				y_only_2[i] = stn * np.sin(y)
 
 			'''
 			All of these are gradients, first two are just decomposed into x y
@@ -168,7 +177,7 @@ def gerstner_waves(o1, o0):
 	elif P.COMPLEXITY == 1:
 		'''T&R More neg values mean more counterclockwise'''
 		if len(SS) > 1:
-			if SS[0] == 2 and SS[1] == 3:
+			if SS[0] == 2 and SS[1] == 3:  # ????
 				pass
 			else:
 				rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
@@ -178,7 +187,7 @@ def gerstner_waves(o1, o0):
 		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
 		# rotation = min_max_normalization(rotation, y_range=[-0.5 * np.pi, 0.5 * np.pi])
 		# pass
-	return xy, dxy, alphas, rotation, peaks
+	return xy, dxy, alphas, rotation, peaks, y_only_2
 
 
 def foam_b(o1, peak_inds):
@@ -314,7 +323,7 @@ def foam_f(o1, peak_inds):
 		xy_t[start:start + num, 1] *= mult_y
 
 		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=4, b=20, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.0, 0.99])
+		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.0, 0.9])
 
 		alphas[start:start + num] = alpha_mask
 

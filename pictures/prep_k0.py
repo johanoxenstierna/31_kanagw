@@ -21,14 +21,18 @@ def cut_k0(k0, inds_x, inds_z, d=None):
     delete_old(PATH_OUT)
 
     '''Alpha mask'''
-    rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*10, 0], [0, d*10]])
+    rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*4, 0], [0, d*4]])  # more=more visible
     # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
     x, y = np.mgrid[0:d:1, 0:d:1]
     pos = np.dstack((x, y))
-    mask = rv.pdf(pos)
-    mask = mask / np.max(mask)
+    alpha_mask = rv.pdf(pos)
+    alpha_mask = alpha_mask / np.max(alpha_mask)
 
-    '''Obs this needs to correspond exactly with k0'''
+    '''
+    Obs this needs to correspond exactly with k0. 
+    Needs to be flipped somehow. 
+    plt.gca() is FLIPPED
+    '''
 
     for i in range(len(inds_x)):
         for j in range(len(inds_z)):
@@ -37,23 +41,20 @@ def cut_k0(k0, inds_x, inds_z, d=None):
 
             # aa = k0[:, 60:20:-1, :]
 
-            pic = k0[ind_z + int(d/2):ind_z - int(d/2):-1, ind_x - int(d/2):ind_x + int(d/2), :]
+            # pic = k0[ind_z + int(d/2):ind_z - int(d/2):-1, ind_x - int(d/2):ind_x + int(d/2), :]
+            pic = k0[ind_z - int(d/2):ind_z + int(d/2), ind_x - int(d/2):ind_x + int(d/2), :]
 
-            # alpha = pic[:, :, 3] * mask  # ???
-            # try:
-            pic[:, :, 3] = mask
-            # except:
-            #     adf = 5
+            pic[:, :, 3] = alpha_mask
 
             pic_key = str(ind_x) + '_' + str(ind_z)
             np.save(PATH_OUT + pic_key, pic)
 
 
 def get_c_d(k0, d):
-    c_ = k0[0:d, 100:100 + d, :]
+    c_ = k0[720:719 - d:-1, 100:100 + d, :]
     # d_ = k0[0:d, 0:d, :]
     # d_ = k0[0:int(d/2), 0:int(d/2), :]
-    d_ = k0[0:d, 0:d, :]
+    d_ = k0[720:719 - d:-1, 0:d, :]
 
     rv = multivariate_normal(mean=[d / 2, d / 2], cov=[[d * 3, 0], [0, d * 3]])
     # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
@@ -74,7 +75,7 @@ def delete_old(PATH):
 
     removed_files = 0
     for file_name_rem in all_file_names:
-        print("removing " + str(file_name_rem))
+        # print("removing " + str(file_name_rem))
         os.remove(PATH + file_name_rem)
         removed_files += 1
     print("removed_files: " + str(removed_files))

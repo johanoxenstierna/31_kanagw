@@ -5,12 +5,15 @@ import scipy
 from src.trig_functions import min_max_normalization
 
 
-NUM = 15
+NUM = 60
 beta_pdf = beta.pdf(x=np.linspace(0, 1, NUM), a=4, b=5, loc=0)
-beta_pdf = min_max_normalization(beta_pdf, y_range=[0, 0.8])
+beta_pdf = min_max_normalization(beta_pdf, y_range=[0, 1.5])
 peak = scipy.signal.find_peaks(beta_pdf)[0][0]
-beta_pdf[peak:] *= np.geomspace(start=1, stop=0.2, num=NUM - peak)
-ax0 = plt.plot(beta_pdf)
+# beta_pdf[peak:] *= np.geomspace(start=1, stop=0.2, num=NUM - peak)
+# beta_pdf[peak:] *= np.geomspace(start=1, stop=0.2, num=NUM - peak)
+
+beta_pdf[peak:] = np.exp(np.linspace(start=0, stop=-10, num=NUM - peak))
+ax0 = plt.plot(beta_pdf, marker='o')
 
 # beta_rvs = beta.rvs(a=2, b=5, loc=0, scale=200, size=25000)
 # plt.hist(beta_rvs, bins=100)

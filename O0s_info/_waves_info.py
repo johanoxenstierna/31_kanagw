@@ -47,37 +47,45 @@ class Waves_info:
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 1])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        # w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=3, loc=0)
+        # w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=6, b=2, loc=0)
+        # aa = w0 + w1
+        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        peak = scipy.signal.find_peaks(stns_z0)[0][-1]
+        stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
 
-        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.2, 0.5])
-        peak = scipy.signal.find_peaks(stns_x0)[0][0]
-        # num = int(0.3 * P.NUM_X)
-        stns_x0[peak:] *= np.geomspace(start=1, stop=0.1, num=P.NUM_X - peak)
+        w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=20, loc=0)
+        w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=20, loc=0)
+        w2 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=4, loc=0)
+        # stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
+        stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 2.5])
+        # peak = scipy.signal.find_peaks(stns_x0)[0][-1]
+        # stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_X - peak))
 
-        stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=1, loc=0)  # a>b BIGGEST FURTHEST AWAY
+        stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=2, loc=0)  # a>b BIGGEST FURTHEST AWAY
         stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        peak = scipy.signal.find_peaks(stns_z1)[0][0]
+        stns_z1[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
 
         stns_x1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
         stns_x1 = min_max_normalization(stns_x1, y_range=[0.2, 1.5])
         peak = scipy.signal.find_peaks(stns_x1)[0][0]
-        # num = int(0.3 * P.NUM_X)
-        stns_x1[peak:] *= np.geomspace(start=1, stop=0.1, num=P.NUM_X - peak)
+        stns_x1[peak:] = np.exp(np.linspace(start=0, stop=-5, num=P.NUM_X - peak))
 
         for i in range(P.NUM_Z):
             for j in range(P.NUM_X):
                 stn_z = stns_z0[i]
                 stn_x = stns_x0[j]
-                stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                stn_zx = 0.2 * stn_z + 0.8 * stn_x
                 _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
 
                 stn_z = stns_z1[i]
                 stn_x = stns_x1[j]
-                stn_zx = 0.5 * stn_z + 0.5 * stn_x
+                stn_zx = 0.2 * stn_z + 0.8 * stn_x
                 _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  '''
-        _s.distance_mult = np.linspace(1, 0.3, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
+        _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
 
         # NEEDS TO BE ALIGNED WITH X TOO
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff

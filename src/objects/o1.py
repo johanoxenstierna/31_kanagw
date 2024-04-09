@@ -31,20 +31,15 @@ class O1C(AbstractObject, AbstractSSS):
         _s.O2 = {}
         _s.alphas = None
 
-        '''
-        
-        '''
-
         _s.gi['init_frames'] = [_s.o0.gi.o1_init_frames[0]]  # same for all
-
         _s.gi['ld'][0] = _s.o0.gi.o1_left_x[_s.x_key] + _s.o0.gi.o1_left_z[_s.z_key]  # last one is shear! probably removed later
         _s.gi['ld'][1] = _s.o0.gi.o1_down_z[_s.z_key]
 
         if P.COMPLEXITY == 0:
             pass
-        elif P.COMPLEXITY == 1:
-            _s.gi['ld'][0] += random.randint(-15, 15)
-            _s.gi['ld'][1] += random.randint(-10, 10)
+        # elif P.COMPLEXITY == 1:
+        _s.gi['ld'][0] += random.randint(-10, 10)
+        _s.gi['ld'][1] += random.randint(-5, 5)
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
         # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
@@ -66,7 +61,7 @@ class O1C(AbstractObject, AbstractSSS):
         '''NEXT: add rotation here'''
 
         _s.xy_t, _s.dxy, \
-        _s.alphas, _s.rotation, _s.peaks = gerstner_waves(o1=_s, o0=_s.o0)
+        _s.alphas, _s.rotation, _s.peaks, _s.y_only_2 = gerstner_waves(o1=_s, o0=_s.o0)
         # _s.alphas = np.zeros(shape=(_s.gi['frames_tot']))
         # _s.xy[:, 1] *= -1  # flip it.
 
@@ -93,7 +88,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.rotation = np.zeros((len(o1.xy),))
         _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=3, distance=40)[0]  # OBS height needs tuning!!!
+        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=3, distance=10)[0]  # OBS height needs tuning!!!  31
         peaks_inds -= 5  # EXPLAIN
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
