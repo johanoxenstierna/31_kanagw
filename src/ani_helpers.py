@@ -40,7 +40,14 @@ def decrement_all_index_axs0(index_removed, O0, waves=None):
 
 
 def set_O1(o, ax_b, axs0):
-	""""""
+	"""
+	TODO: Test putting + transData in front  Prob not gonna go anything.
+	AND add skewing
+	Also, ax.plot() has a shadow transform:
+	ax.plot(x, y, transform=shadow_transform, zorder=0.5*line.get_zorder())
+	but it will add another ax to axs0
+	"""
+
 	M = mtransforms.Affine2D(). \
 		rotate(o.rotation[o.clock]). \
 	    translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData

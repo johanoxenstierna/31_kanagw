@@ -58,31 +58,31 @@ class GenObjects:
         """
 
         '''THESE ARE TEMPORARY. REMOVE WHEN PADDING SORTED'''
-        # START_Z = 500  # MOVING DOWN. USING k0
-        # STOP_Z = 650  # this plus half diameter
-
-        START_Z = 26  # MOVING DOWN. USING k0
-        STOP_Z = 200  # this plus half diameter
-
-        '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
-        inds_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
-        inds_z = np.linspace(start=START_Z, stop=STOP_Z, num=P.NUM_Z, dtype=int)
 
         k0 = imread('./pictures/k0.png')
         k0 = np.flipud(k0)  # essential
 
         d = 0
-        if P.COMPLEXITY == 0:
-            d = int(800 / P.NUM_X)
+        if P.COMPLEXITY == 0:  # needed cuz overlap between dots may be of interest
+            d = int(1000 / P.NUM_X)
         elif P.COMPLEXITY == 1:
-            d = int(1400 / P.NUM_X)  # OBS check against alpha.
-
-        # d = 30
+            d = int(1500 / P.NUM_X)  # OBS check against alpha.
 
         if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1
-            if d > 720 - STOP_Z:
-                raise Exception("d too large")
+
+        # These are now from bottom.
+        BOT_Z = int(d/2) + 1  # If start_z = 25, that means diameter max is 49
+        TOP_Z = 200  # this plus half diameter
+
+        # pend del
+        if BOT_Z < int(d / 2):
+            print("inds_z[0]: " + str(BOT_Z), "   d: " + str(d))
+            raise Exception("d too large")
+
+        '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
+        inds_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
+        inds_z = np.linspace(start=BOT_Z, stop=TOP_Z, num=P.NUM_Z, dtype=int)
 
         prep_k0.cut_k0(k0, inds_x, inds_z, d)
         c_, d_ = prep_k0.get_c_d(k0, d)
@@ -109,11 +109,11 @@ class GenObjects:
                 b=foam moving backwards, f=forwards
                 Obs they need to have a lifetime linked with wave-periods. '''
 
-                type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
-                id_f_b = str(i) + '_' + str(j) + '_' + type
-                o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1f_b.gen_b(o1)
-                O0['waves'].O1[id_f_b] = o1f_b
+                # type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
+                # id_f_b = str(i) + '_' + str(j) + '_' + type
+                # o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                # o1f_b.gen_b(o1)
+                # O0['waves'].O1[id_f_b] = o1f_b
 
                 type = 'f_f'  # NOT USED FOR SMALL ONES
                 id_f_f = str(i) + '_' + str(j) + '_' + type

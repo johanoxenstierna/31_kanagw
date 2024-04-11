@@ -31,7 +31,7 @@ def gerstner_waves(o1, o0):
 
 	frames_tot = o1.gi['frames_tot']
 
-	d = np.array([1, 1])
+	d = np.array([None, None])
 
 	xy = np.zeros((frames_tot, 2))  # this is for the final image, which is 2D!
 	y_only_2 = np.zeros((frames_tot,))
@@ -49,8 +49,8 @@ def gerstner_waves(o1, o0):
 	x = o1.gi['ld'][0]
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	SS = [0, 1, 2]
-	# SS = [0]
+	# SS = [0, 1, 2]
+	SS = [0]
 	# SS = [2]
 	# SS = [1]
 	# SS = [0, 2]
@@ -64,16 +64,20 @@ def gerstner_waves(o1, o0):
 		'''
 		When lam is high it means that k is low, 
 		When k is low it means stn is high. 
-		stn is the multiplier for y 
+		stn is the multiplier for y
+		
+		OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!! 
+		Perhaps not? Increasing d will definitely increase k  
 		'''
 
-		if w == 0:  # OBS ADDIND WAVES LEADS TO WAVE INTERFERENCE!!!
-			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([0.4, -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
+		if w == 0:  #
+			# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.4, -0.9])  # OBS this is multiplied with x and z, hence may lead to large y!
+			d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
 			c = 0.1  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c = 0.02
+				d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			lam = 200
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
@@ -91,7 +95,7 @@ def gerstner_waves(o1, o0):
 			lam = 1200  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
-			stn = None
+			stn = None  # cuz its also affected by time
 			# steepness_abs = 1
 		elif w == 2:
 			d = np.array([-0.2, -0.7])
@@ -110,7 +114,7 @@ def gerstner_waves(o1, o0):
 				stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
 				# stn = stn_particle / k
 
-			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin?
+			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
 
 			if w != 2:  # SMALL ONES MOVE LEFT
 				xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
@@ -118,7 +122,8 @@ def gerstner_waves(o1, o0):
 				xy[i, 0] -= stn * np.cos(y)
 
 			xy[i, 1] += stn * np.sin(y)
-			if w == 2:
+
+			if w == 2:  # to ensure foam for 2. Perhaps?
 				y_only_2[i] = stn * np.sin(y)
 
 			'''
@@ -135,23 +140,17 @@ def gerstner_waves(o1, o0):
 	dxy[:, 0] = -dxy[:, 0]
 	dxy[:, 1] = -dxy[:, 1]
 
-	# dxy[:, 0] = min_max_normalization(dxy[:, 0], y_range=[-np.pi / 2, np.pi / 2])
-	# # dxy[:, 0] = min_max_normalization(dxy[:, 0], y_range=[0.01, 2 * np.pi])
-	# dxy[:, 1] = min_max_normalization(dxy[:, 1], y_range=[-np.pi / 2, np.pi / 2])
-	# dxy[:, 2] = min_max_normalization(dxy[:, 2], y_range=[-0.99, 0.99])
-
-	# alphas = np.full(shape=(len(dxy),), fill_value=left_start / np.pi)  # left_start ONLY affects o1
-	# alphas = np.linspace(start=0.01, stop=0.99, num=frames_tot)
-
 	'''NEED TO SHIFT BY LEFT START SOMEHOW'''
-	peaks = scipy.signal.find_peaks(xy[:, 1])[0]
-	alphas = np.full(shape=(len(xy),), fill_value=0.5)
-
+	peaks = scipy.signal.find_peaks(xy[:, 1])[0]  # includes troughs
 	peaks_pos_y = []  # crest
-	for i in range(len(peaks)):
+	for i in range(len(peaks)):  # could be replaced with lambda prob
 		pk_ind = peaks[i]
-		if pk_ind > 5 and xy[pk_ind, 1] > 0:
+		if pk_ind > 5 and xy[pk_ind, 1] > 0:  # check that peak y value is positive
 			peaks_pos_y.append(pk_ind)
+
+	'''ALPHA THROUGH TIME OBS ONLY FOR STATIC'''
+	ALPHA_LOW_BOUND = 0.999
+	alphas = np.full(shape=(len(xy),), fill_value=ALPHA_LOW_BOUND)
 
 	for i in range(len(peaks_pos_y) - 1):
 		peak_ind0 = peaks_pos_y[i]
@@ -160,17 +159,9 @@ def gerstner_waves(o1, o0):
 		start = peak_ind0 + int(0.5 * num)
 		# alphas[pk_ind0:pk_ind1 + num]
 
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.5, 1])
-		alphas[start:start + num] = alpha_mask
-
-	adf = 6
-
-	# alphas = -xy[:, 0] - xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	# alphas = dxy[:, 1]
-	# alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
-
-	#
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, num), a=2, b=2, loc=0)
+		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[ALPHA_LOW_BOUND, 1])  # [0.5, 1]
+		alphas[start:start + num] = alpha_mask_t
 
 	if P.COMPLEXITY == 0:
 		rotation = np.zeros(shape=(len(xy),))
@@ -182,11 +173,8 @@ def gerstner_waves(o1, o0):
 			else:
 				rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
 		else:
-			pass # TEMP
-		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.1 * np.pi, 0.1 * np.pi])
-		# rotation = min_max_normalization(-xy[:, 1], y_range=[-0.0001 * np.pi, 0.0001 * np.pi])
-		# rotation = min_max_normalization(rotation, y_range=[-0.5 * np.pi, 0.5 * np.pi])
-		# pass
+			rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
+
 	return xy, dxy, alphas, rotation, peaks, y_only_2
 
 
@@ -222,54 +210,39 @@ def foam_b(o1, peak_inds):
 
 		alphas[start:start + num] = alpha_mask
 
-	aa = 7
-
-	# PEND DEL
-	# _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
-	# xy = np.copy(o1.xy)
-	# xy[:, 0] *= 1
-	# # xy[:, 1] += 100
-	#
-	# # alphas = np.zeros(shape=(o1.gi['frames_tot']))
-	# # peaks_inds = scipy.signal.find_peaks(o1.xy[:, 1], distance=50)[0]
-	#
-	# # alphas = -0.2 * xy[:, 0] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	# # alphas = 0.2 * xy[:, 1] #+ 0.8 * xy[:, 1] #+ dxy[:, 1]   # origin is left bottom
-	# a_x = o1.xy_t[:, 0]
-	# inds = np.where(a_x < 0)[0]
-	# a_x[inds] = 0
-	#
-	# a_y = o1.xy_t[:, 1]
-	# # inds = np.where(a_x < 0)[0]
-	# # a_x[inds] = 0
-	#
-	# alphas = 0.0 * a_x + 0.99 * a_y
-	# # alphas = xy[:, 0]  #+ dxy[:, 1]   # origin is left bottom
-	# alphas = min_max_normalization(alphas, y_range=[0.01, 0.3])
-	# # alphas = min_max_normalization(alphas, y_range=[0.1, 0.99])
-	# # alphas = np.ones(shape=(len(xy),))
-
-	# xy = np.copy(xy_t)
-
-	# shift = np.full(shape=(xy.shape), fill_value=[o1.xy[0, 0], o1.xy[0, 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
-	# shift = np.full(shape=(xy_t.shape), fill_value=[o1.xy[0, 0], o1.xy[0, 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
-	# xy[:, :] += shift
-
-	# alphas[peaks_inds] = 1
-
 	return xy_t, alphas, rotation
 
 
-def foam_f(o1, peak_inds):
+def foam_f(o1):
 	"""
-	TODO: Need to do projectile motion until y tangent first becomes positive.
-	Precompute peaks and use those indicies as starting points.
+	peak_inds: they are now just imported from static
+	New idea: Everything between start and start + num is available.
+	So use everything and then just move object to next peak by shift.
+	Instead of setting alpha as beta with early peak, set peak to middle and
+
 	"""
 
 	xy_t = np.copy(o1.xy_t)
 	rotation = np.zeros((len(o1.xy),))
 	alphas = np.full(shape=(len(xy_t),), fill_value=0.0)
 
+	'''OBS height SUPER IMPORTANT TO AVOID 2 GETTING f '''
+	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
+	peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
+	'''Below line probably need to be PERCENTAGE'''
+	# peak_inds -= 10  # neg mean that they will start before the actual peak
+	# neg_inds = np.where(peak_inds < 0)[0]
+	# if len(neg_inds) > 0:  # THIS IS NEEDED DUE TO peak_inds -= 10
+	# 	peak_inds[neg_inds] = 0
+
+	if len(peak_inds) > 1:  # First ind will turn neg for some points
+		if peak_inds[0] < 10:
+			peak_inds = peak_inds[1:]
+		peak_inds -= 10
+		if len(np.where(peak_inds < 0)[0]) > 0:
+			raise Exception("THIS IS NEEDED DUE TO peak_inds -= 10")
+
+	# PEND DEL: its done in loop below instead
 	# pos_inds_x = np.where(xy_t[:, 0] > 0)[0]  # these are used for a later reset
 	# neg_inds_x = np.where(xy_t[:, 0] < 0)[0]  # these are used for a later reset
 	# pos_inds_y = np.where(xy_t[:, 1] > 0)[0]
@@ -278,9 +251,8 @@ def foam_f(o1, peak_inds):
 	# aa = np.where((xy_t[:, 0] > 0) & (xy_t[:, 1] > 0))[0]
 	# xy_t[aa, 0] *= 2
 
-	'''Shift to upper left'''
-	xy_t_min_x = np.min(xy_t[:, 0])
-	xy_t_min_y = np.min(xy_t[:, 1])
+	# xy_t_min_x = np.min(xy_t[:, 0])
+	# xy_t_min_y = np.min(xy_t[:, 1])
 
 	# xy_t[:, 0] += abs(xy_t_min_x)  # 1
 	# xy_t[:, 1] += abs(xy_t_min_y)
@@ -304,30 +276,44 @@ def foam_f(o1, peak_inds):
 		peak_ind0 = peak_inds[i]
 		peak_ind1 = peak_inds[i + 1]
 
-		num = int((peak_ind1 - peak_ind0) / 2)
-		start = int(peak_ind0 + 0.0 * num)
+		xy_tp = xy_t[peak_ind0:peak_ind1]
 
-		'''scaling'''
-		mult_x = beta.pdf(x=np.linspace(0, 1, num), a=1.5, b=1.5, loc=0)
-		mult_x = min_max_normalization(mult_x, y_range=[1, 2])
+		# num = int((peak_ind1 - peak_ind0) / 1 - 1)  # -1 for buffer to next one
+		# start = int(peak_ind0 + 0.0 * num)  # making peaks start early is done before function call
+		# stop = start + num
 
-		mult_y = -beta.pdf(x=np.linspace(0, 1, num), a=1.5, b=1.5, loc=0)
+		'''
+		Generating the break motion by scaling up the Gersner rotation
+		Might also need to shift it. Which is fine if alpha used correctly
+		'''
+		# mult_x = beta.pdf(x=np.linspace(0, 1, num), a=1.5, b=1.5, loc=0)
+		# mult_x = min_max_normalization(mult_x, y_range=[1, 2])
+
+		mult_x = np.linspace(start=1, stop=2, num=len(xy_tp))
+		mult_y = -beta.pdf(x=np.linspace(0, 1, num=len(xy_tp)), a=1.5, b=1.5, loc=0)
 		mult_y = min_max_normalization(mult_y, y_range=[0.5, 1])
 
-		xy_t[start:start + num, 0] *= mult_x
-		#
-		# # aa = xy_t[start:start + num, 0]
-		# # bb = o1.xy_t[start:start + num, 0]
-		# aa = np.copy(xy_t)
+		# xy_t[start:start + num, 0] *= mult_x
+		# xy_t[start:start + num, 1] *= mult_y
 
-		xy_t[start:start + num, 1] *= mult_y
+		xy_tp[:, 0] *= mult_x
+		xy_tp[:, 1] *= mult_y
 
-		alpha_mask = beta.pdf(x=np.linspace(0, 1, num), a=4, b=20, loc=0)
-		alpha_mask = min_max_normalization(alpha_mask, y_range=[0.0, 0.9])
+		x_max_ind = np.argmax(xy_tp[:, 0])
 
-		alphas[start:start + num] = alpha_mask
+		xy_tp[x_max_ind:, 0] = xy_tp[x_max_ind, 0]
+		xy_tp[x_max_ind:, 1] = xy_tp[x_max_ind, 1]
 
-		aa = 5
+		# xy_t[peak_ind0:peak_ind1, :] = xy_tp
+		xy_t[peak_ind0:peak_ind1, 0] = xy_tp[:, 0]
+
+		# alpha_mask_t = beta.pdf(x=np.linspace(0, 1, num), a=4, b=20, loc=0)
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=1.5, b=1.5, loc=0)
+		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[0.0, 0.9])
+
+		alphas[peak_ind0:peak_ind1] = alpha_mask_t
+
+	aa = 5
 
 	# xy_t[pos_inds_x, 0] *= 2
 	# xy_t[neg_inds_x, 0] = o1.xy_t[neg_inds_x, 0]
@@ -348,7 +334,7 @@ def foam_f(o1, peak_inds):
 	# if o1.id != '15_b_0':2
 	# 	alphas = np.zeros(shape=(o1f_f.gi['frames_tot'],))
 
-	# PEND DEL
+	# PEND DEL: Its too complicated to create a new circle from nothing perhaps.
 	# thetas = np.linspace(0, 10*np.pi, num=50)
 	# thetas = np.linspace(0.6 * np.pi, -1 * np.pi, num=o1f_f.gi['frames_tot'])
 	# add_x = np.linspace(50, 500, num=o1f_f.gi['frames_tot'])  # TODO
@@ -393,18 +379,19 @@ def shift_wave(xy_t, origin=None, gi=None):
 	return xy
 
 
-if __name__ == '__main__':  # cant be done in trig funcs main cuz circular import
-	fig = plt.figure(figsize=(10, 5))
-	gi = {}
-	gi['ld'] = [0, 0]
-	gi['steepness'] = 150
-	gi['frames_tot'] = 300
-	xy, alphas = gerstner_waves(gi=gi)
-
-	ax1 = plt.plot(alphas)
-	# ax1 = plt.plot(xy[:, 0])
-	ax2 = plt.plot(xy[:, 1])  # obs flipped!!!
-	plt.show()
+# DEPR LACK OF CAP ====
+# if __name__ == '__main__':  # cant be done in trig funcs main cuz circular import
+# 	fig = plt.figure(figsize=(10, 5))
+# 	gi = {}
+# 	gi['ld'] = [0, 0]
+# 	gi['steepness'] = 150
+# 	gi['frames_tot'] = 300
+# 	xy, alphas = gerstner_waves(gi=gi)
+#
+# 	ax1 = plt.plot(alphas)
+# 	# ax1 = plt.plot(xy[:, 0])
+# 	ax2 = plt.plot(xy[:, 1])  # obs flipped!!!
+# 	plt.show()
 
 
 

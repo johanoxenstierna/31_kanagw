@@ -16,9 +16,10 @@ class O1C(AbstractObject, AbstractSSS):
 
         _s.id_s = o1_id.split('_')
         _s.x_key = int(_s.id_s[0])
-        _s.z_key = int(_s.id_s[1])
+        _s.z_key = int(_s.id_s[1])  # biggest z_key is at the top
 
-        _s.zorder = 100 + _s.z_key + _s.x_key  # needs x key as well
+        z_key_g = 20000 - _s.z_key * 100
+        _s.zorder = z_key_g + _s.x_key
 
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
@@ -89,7 +90,8 @@ class O1C(AbstractObject, AbstractSSS):
         _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
 
         peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=3, distance=10)[0]  # OBS height needs tuning!!!  31
-        peaks_inds -= 5  # EXPLAIN
+        '''Above line could be moved to static. Let it compute all peaks'''
+        peaks_inds -= 5  # This makes them appear sooner
         neg_inds = np.where(peaks_inds < 0)[0]
         if len(neg_inds) > 0:
             peaks_inds[neg_inds] = 0
@@ -105,18 +107,15 @@ class O1C(AbstractObject, AbstractSSS):
 
     def gen_f(_s, o1):
         """
-        self is o1f_f and o1 is the base
+
         """
 
         '''indicies where y-tangent is at max'''
         # aa = np.where(o1.dxy[:, 1] > )
 
-        peaks_inds = scipy.signal.find_peaks(o1.xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
-        peaks_inds -= 5
-        neg_inds = np.where(peaks_inds < 0)[0]
-        if len(neg_inds) > 0:
-            peaks_inds[neg_inds] = 0
 
+
+        # PEND DEL
         # if len(peaks_inds) < 1:
         #     _s.gi['init_frames'] = [3]
         #     _s.gi['frames_tot'] = 2
@@ -128,8 +127,9 @@ class O1C(AbstractObject, AbstractSSS):
             # _s.gi['init_frames'] = [peaks_inds[0]]
             # _s.gi['frames_tot'] = 50
 
-        _s.xy_t, _s.alphas, _s.rotation = foam_f(o1, peaks_inds)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
-        _s.zorder += 20
+
+        _s.xy_t, _s.alphas, _s.rotation = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
+        _s.zorder += 20  # OBS needs tuning
 
         _s.xy = np.copy(_s.xy_t)
         _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
@@ -137,71 +137,3 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
         # _s.xy[:, 1] += 10
 
-    # def set_frame_stop_to_sp_max(_s):
-    #     """Loop through sps and set max to frame_stop"""
-    #
-    #     _max = 0
-    #     for sp_id, sp in _s.sps.items():
-    #         if sp.frame_ss[1] > _max:
-    #             _max = sp.frame_ss[1]
-    #
-    #     _s.frame_ss[1] = deepcopy(_max) + 5
-
-
-
-    # def finish_info(_s):
-    #     """Separated from _init_ bcs extra things may need to be finished in viewer."""
-    #
-    #     _s.alphas = np.ones(shape=(_s.gi['frames_tot']))
-    #
-    #     # if _s.o0.id == 'projectiles':
-    #     #
-    #     #     id_int = int(_s.id[-1])  # OBS. Used by o1_down_offsets
-    #     #     # _s.gi['ld'][1] += _s.o0.gi.o1_down_offsets[id_int]  # NOT GOOD. dont change parameters
-    #     #
-    #     #     '''30_ xys and thetas based on direction'''
-    #     #     XY = np.zeros(shape=(_s.gi['frames_tot'], 2))
-    #     #     # XY[:, 1] = _s.gi['ld'][1]  # y never changes
-    #     #
-    #     #     rand_0 = np.random.choice([-1, 1])
-    #     #     rand_1 = np.random.randint(low=1, high=6, size=1)[0]
-    #     #
-    #     #     X = rand_0 * np.sin(np.linspace(0, rand_1 * np.pi, num=len(XY)))
-    #     #     rot = rand_0 * 0.5 * np.cos(np.linspace(0, rand_1 * np.pi, num=len(XY)))
-    #     #     XY[:, 0] = _s.gi['ld'][0] + X * np.random.randint(low=5, high=30, size=1)[0]
-    #     #     XY[:, 1] = _s.gi['ld'][1] + _s.o0.gi.o1_down_offsets[id_int] - np.sin(np.linspace(0, 0.5 * np.pi, num=len(XY))) * 700
-    #     #     # if np.min(XY[:, 1]) < 0:
-    #     #     #     raise Exception("o2 going out of frame")
-    #     #     _s.XY = XY
-    #     #
-    #     #     _s.rot = rot
-    #     #     _s.cmap = random.choice(['afmhot', 'Wistia', 'cool', 'hsv', 'summer'])
-    #     #     # _s.cmap = random.choice(['hsv'])
-    #     #
-    #     #     _s.alphas = gen_alpha(_s, _type='o1_projectiles')
-    #     #
-    #     # elif _s.o0.id == 'clouds':
-    #     #
-    #     #     # id_int = int(_s.id[-1])  # OBS. Used by o1_down_offsets
-    #     #     # _s.gi['ld'][1] += _s.o0.gi.o1_down_offsets[id_int]  # NOT GOOD. dont change parameters
-    #     #
-    #     #     '''30_ xys and thetas based on direction'''
-    #     #     XY = np.zeros(shape=(_s.gi['frames_tot'], 2))
-    #     #     # XY[:, 1] = _s.gi['ld'][1]  # y never changes
-    #     #
-    #     #     X = np.linspace(0, 300, num=len(XY))
-    #     #     Y = np.linspace(0, 100, num=len(XY))
-    #     #
-    #     #     left_offset = np.random.randint(low=0, high=100, size=1)[0]
-    #     #     down_offset = np.random.randint(low=0, high=50, size=1)[0]
-    #     #     XY[:, 0] = _s.gi['ld'][0] + X + left_offset
-    #     #     XY[:, 1] = _s.gi['ld'][1] - Y + down_offset
-    #     #     _s.XY = XY
-    #     #
-    #     #     rot = np.linspace(0, 0.2 * np.pi, num=len(XY))
-    #     #     _s.rot = rot
-    #     #
-    #     #     _s.scale = np.linspace(0.5, 1, num=len(XY))
-    #     #
-    #     #     # _s.alphas = np.full(shape=(len(XY),), fill_value=1)
-    #     #     _s.alphas = gen_alpha(_s, _type='o1_clouds')

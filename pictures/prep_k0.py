@@ -21,7 +21,8 @@ def cut_k0(k0, inds_x, inds_z, d=None):
     delete_old(PATH_OUT)
 
     '''Alpha mask'''
-    rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*4, 0], [0, d*4]])  # more=more visible
+    # rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*4, 0], [0, d*4]])  # more=more visible
+    rv = multivariate_normal(mean=[d/2, d/2], cov=[[d*40000, 0], [0, d*40000]])  # more=more visible
     # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
     x, y = np.mgrid[0:d:1, 0:d:1]
     pos = np.dstack((x, y))
@@ -32,6 +33,7 @@ def cut_k0(k0, inds_x, inds_z, d=None):
     Obs this needs to correspond exactly with k0. 
     Needs to be flipped somehow. 
     plt.gca() is FLIPPED
+    Caution this is fk up. 
     '''
 
     for i in range(len(inds_x)):
@@ -39,7 +41,9 @@ def cut_k0(k0, inds_x, inds_z, d=None):
             ind_x = inds_x[i]
             ind_z = inds_z[j]
 
-            # aa = k0[:, 60:20:-1, :]
+            if ind_z < int(d/2):
+                print("ind_z: " + str(ind_z), "   d: " + str(d))
+                raise Exception("d too large")
 
             # pic = k0[ind_z + int(d/2):ind_z - int(d/2):-1, ind_x - int(d/2):ind_x + int(d/2), :]
             pic = k0[ind_z - int(d/2):ind_z + int(d/2), ind_x - int(d/2):ind_x + int(d/2), :]

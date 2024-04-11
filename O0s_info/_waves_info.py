@@ -32,15 +32,10 @@ class Waves_info:
         This means that direction vector d needs to be tuned TOGETHER with it. 
         This shear can probably be removed if the image from which point pngs are taken is sheared instead. 
         '''
-        # _s.o1_left_x = np.linspace(0, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
-        # _s.o1_down_z = np.linspace(-50, 100, num=P.NUM_Z)
-        _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
-        # _s.o1_steepnessess_z = np.linspace(0.9, 0.9, num=P.NUM_Z)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        # _s.o1_steepnessess_x = np.linspace(0.3, 1, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        # _s.stns_x = np.linspace(1.5, 0.3, num=P.NUM_X)  # OBS ONLY BETWEEN 0 and 1. OBS NO STEEPNESS X
-        # _s.stns_x = np.geomspace(start=2, stop=0.1)
+        # _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        _s.o1_down_z = np.linspace(50, 400, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
         _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
@@ -88,10 +83,11 @@ class Waves_info:
         _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
 
         # NEEDS TO BE ALIGNED WITH X TOO
+        '''This is probably depr. Wave needs to break at left first, but below was used 
+         to fix init_frame prob.'''
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff
 
         _s.o1_gi = _s.gen_o1_gi()
-        # _s.o2_gi = _s.gen_o2_gi()
 
     def gen_o1_gi(_s):
         """
@@ -115,19 +111,3 @@ class Waves_info:
 
         return o1_gi
 
-    # def gen_o2_gi(_s):
-    #     """
-    #     UPDATE: THESE ARE NO LONGER CHILDREN OF F,
-    #     THEIR INIT FRAMES CAN BE SET BY F THOUGH.
-    #     """
-    #     o2_gi = {
-    #         'alpha_y_range': [1, 1],
-    #         'init_frames': None,  # ONLY FOR THIS TYPE
-    #         'frames_tot': 1200,  # MUST BE LOWER THAN SP.FRAMES_TOT. MAYBE NOT. INVOLVED IN BUG  OBS
-    #         'v_loc': 50, 'v_scale': 4,  # 50 THIS IS HOW HIGH THEY GO (not how far down)
-    #         'ld': [None, None],  # left-down
-    #         'up_down': 'up',
-    #         'zorder': 1000
-    #     }
-    #
-    #     return o2_gi

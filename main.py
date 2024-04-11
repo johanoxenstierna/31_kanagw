@@ -1,5 +1,10 @@
 """
 Matplotlib animation of projectiles, waves and clouds
+Next time:
+-Foam timing.
+-Remove 1 and work on fractals.
+-Random b foam flying into air.
+-Make 2 more pronounced.
 """
 
 import numpy as np
