@@ -1,6 +1,6 @@
 """
 Matplotlib animation of projectiles, waves and clouds
-Next time:
+-zorder.
 -Foam timing.
 -Remove 1 and work on fractals.
 -Random b foam flying into air.
@@ -93,7 +93,7 @@ def animate(i):
 
     print(prints)
 
-    return axs0 #+ axs1  # 0 for dynamic objects, 1 for background
+    return axs0  # + axs1  # 0 for dynamic objects, 1 for background
 
 
 sec_vid = ((P.FRAMES_STOP - P.FRAMES_START) / FPS)

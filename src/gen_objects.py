@@ -109,11 +109,11 @@ class GenObjects:
                 b=foam moving backwards, f=forwards
                 Obs they need to have a lifetime linked with wave-periods. '''
 
-                # type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
-                # id_f_b = str(i) + '_' + str(j) + '_' + type
-                # o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                # o1f_b.gen_b(o1)
-                # O0['waves'].O1[id_f_b] = o1f_b
+                type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
+                id_f_b = str(i) + '_' + str(j) + '_' + type
+                o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1f_b.gen_b(o1)
+                O0['waves'].O1[id_f_b] = o1f_b
 
                 type = 'f_f'  # NOT USED FOR SMALL ONES
                 id_f_f = str(i) + '_' + str(j) + '_' + type

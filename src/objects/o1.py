@@ -103,7 +103,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
-        _s.xy[:, 1] += 5
+        _s.xy[:, 1] += 1500
 
     def gen_f(_s, o1):
         """
@@ -129,7 +129,7 @@ class O1C(AbstractObject, AbstractSSS):
 
 
         _s.xy_t, _s.alphas, _s.rotation = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
-        _s.zorder += 20  # OBS needs tuning
+        _s.zorder += 2000  # OBS needs tuning
 
         _s.xy = np.copy(_s.xy_t)
         _s.xy *= _s.o0.gi.distance_mult[_s.z_key]

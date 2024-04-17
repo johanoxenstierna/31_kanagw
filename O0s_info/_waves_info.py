@@ -34,8 +34,8 @@ class Waves_info:
         '''
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
-        # _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
-        _s.o1_down_z = np.linspace(50, 400, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        # _s.o1_down_z = np.linspace(50, 400, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
         _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
@@ -49,11 +49,12 @@ class Waves_info:
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
 
-        w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=20, loc=0)
-        w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=20, loc=0)
-        w2 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=4, loc=0)
-        # stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=5, b=5, loc=0)
-        stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 2.5])
+        # w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=20, loc=0)
+        # w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=20, loc=0)
+        # w2 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=4, loc=0)
+        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.5, 1.8])
+        # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         # peak = scipy.signal.find_peaks(stns_x0)[0][-1]
         # stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_X - peak))
 
