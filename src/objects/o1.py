@@ -45,6 +45,8 @@ class O1C(AbstractObject, AbstractSSS):
         # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
 
+
+
     def gen_scale_vector(_s):
 
         scale_ss = []
@@ -62,9 +64,11 @@ class O1C(AbstractObject, AbstractSSS):
         '''NEXT: add rotation here'''
 
         _s.xy_t, _s.dxy, \
-        _s.alphas, _s.rotation, _s.peaks, _s.y_only_2 = gerstner_waves(o1=_s, o0=_s.o0)
-        # _s.alphas = np.zeros(shape=(_s.gi['frames_tot']))
-        # _s.xy[:, 1] *= -1  # flip it.
+        _s.alphas, _s.rotation, _s.peaks, \
+        _s.xy_t0, _s.dxy0, \
+        _s.xy_t1, _s.dxy1, \
+        _s.xy_t2, _s.dxy2, _s.scale \
+            = gerstner_waves(o1=_s, o0=_s.o0)
 
         '''shifting '''
         _s.xy = np.copy(_s.xy_t)
@@ -72,11 +76,9 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
 
-        # _s.xy[:, 1] += 50
+        # _s.scale = np.ones(shape=(len(_s.xy),))
 
-        # _s.o0.populate_T(_s.xy_t, _s.xy, _s.dxy)
-
-        _s.zorder = _s.zorder #
+        _s.zorder = _s.zorder
 
         asdf = 5
 
@@ -103,7 +105,11 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
-        _s.xy[:, 1] += 1500
+        _s.xy[:, 1] += 20
+
+        _s.scale = np.ones(shape=(len(_s.xy),))
+
+        # _s.xy[:, 1] += 1500  # WTF
 
     def gen_f(_s, o1):
         """
@@ -111,22 +117,6 @@ class O1C(AbstractObject, AbstractSSS):
         """
 
         '''indicies where y-tangent is at max'''
-        # aa = np.where(o1.dxy[:, 1] > )
-
-
-
-        # PEND DEL
-        # if len(peaks_inds) < 1:
-        #     _s.gi['init_frames'] = [3]
-        #     _s.gi['frames_tot'] = 2
-        #     _s.xy = np.array([[4, 4], [5, 5]])
-        #     _s.alphas = np.array([0.5, 0.5])
-        #     _s.zorder = 1
-        #     _s.rotation = np.array([0, 0])
-        # else:
-            # _s.gi['init_frames'] = [peaks_inds[0]]
-            # _s.gi['frames_tot'] = 50
-
 
         _s.xy_t, _s.alphas, _s.rotation = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
         _s.zorder += 2000  # OBS needs tuning
@@ -136,4 +126,10 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy[:, 0] += _s.gi['ld'][0] + _s.gi['o1_left_start_z']  # last one should be removed ev
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
         # _s.xy[:, 1] += 10
+
+        _s.scale = np.copy(o1.scale)
+        _s.scale = min_max_normalization(_s.scale, y_range=[0.6, 1])
+        # _s.scale = np.ones((len(o1.scale),))
+        # o1.scale = np.ones((len(o1.scale),))
+
 

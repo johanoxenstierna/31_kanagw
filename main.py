@@ -1,8 +1,8 @@
 """
 Matplotlib animation of projectiles, waves and clouds
--zorder.
--Foam timing.
--Remove 1 and work on fractals.
+-*zorder.
+
+-remove foam from 2
 -Random b foam flying into air.
 -Make 2 more pronounced.
 """

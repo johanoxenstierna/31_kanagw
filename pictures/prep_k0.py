@@ -55,14 +55,15 @@ def cut_k0(k0, inds_x, inds_z, d=None):
 
 
 def get_c_d(k0, d):
-    c_ = k0[720:719 - d:-1, 100:100 + d, :]
-    # d_ = k0[0:d, 0:d, :]
-    # d_ = k0[0:int(d/2), 0:int(d/2), :]
-    d_ = k0[720:719 - d:-1, 0:d, :]
+    # c_ = k0[720:719 - d:-1, 100:100 + d, :]
+    c_ = k0[720:719 - d:-1, 100:100 + d * 2, :]
+    # d_ = k0[720:719 - d:-1, 0:d, :]
+    d_ = k0[720:719 - d:-1, 0:d * 2, :]
 
-    rv = multivariate_normal(mean=[d / 2, d / 2], cov=[[d * 3, 0], [0, d * 3]])
+    # rv = multivariate_normal(mean=[d / 2, d / 2], cov=[[d * 3, 0], [0, d * 3]])  # less cov => less alpha, second one: width
+    rv = multivariate_normal(mean=[d / 2, d / 2], cov=[[d * 3, 0], [0, d * 6]])
     # x, y = np.mgrid[0:d*2:1, 0:d*2:1]
-    x, y = np.mgrid[0:d:1, 0:d:1]
+    x, y = np.mgrid[0:d:1, 0:d * 2:1]
     pos = np.dstack((x, y))
     mask = rv.pdf(pos)
     mask = mask / np.max(mask)

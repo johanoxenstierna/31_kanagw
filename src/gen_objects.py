@@ -71,7 +71,7 @@ class GenObjects:
         if d % 2 != 0:  # this problem is likely due to there not being any picture to sample from.
             d += 1
 
-        # These are now from bottom.
+        # These are now from bottom. WHERE THEY APPEAR ON MAP
         BOT_Z = int(d/2) + 1  # If start_z = 25, that means diameter max is 49
         TOP_Z = 200  # this plus half diameter
 
@@ -89,7 +89,7 @@ class GenObjects:
         print("DIAMETER: " + str(d))
 
         for i in range(len(inds_x)):
-            for j in range(len(inds_z)):
+            for j in range(len(inds_z)):  # smallest ind = bottom
                 ind_x = inds_x[i]
                 ind_z = inds_z[j]
 
@@ -101,6 +101,8 @@ class GenObjects:
                     pic_static = imread('./pictures/waves/O1/d.png')
                 elif P.COMPLEXITY == 1:
                     pic_static = np.load('./pictures/k0_cut/' + file_name)
+
+                '''OBS this combines multiple G waves'''
                 o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
                 o1.gen_static()
                 O0['waves'].O1[id_static] = o1
@@ -115,11 +117,11 @@ class GenObjects:
                 o1f_b.gen_b(o1)
                 O0['waves'].O1[id_f_b] = o1f_b
 
-                type = 'f_f'  # NOT USED FOR SMALL ONES
-                id_f_f = str(i) + '_' + str(j) + '_' + type
-                o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1f_f.gen_f(o1)
-                O0['waves'].O1[id_f_f] = o1f_f
+                # type = 'f_f'  # NOT USED FOR SMALL ONES
+                # id_f_f = str(i) + '_' + str(j) + '_' + type
+                # o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                # o1f_f.gen_f(o1)
+                # O0['waves'].O1[id_f_f] = o1f_f
 
                 adf = 5
 

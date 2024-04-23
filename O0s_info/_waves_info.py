@@ -34,29 +34,27 @@ class Waves_info:
         '''
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
-        _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
-        # _s.o1_down_z = np.linspace(50, 400, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+
+        _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+
+        if P.COMPLEXITY == 1:
+            _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
         _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        # w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=3, loc=0)
-        # w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=6, b=2, loc=0)
-        # aa = w0 + w1
-        stns_z0 = min_max_normalization(stns_z0, y_range=[0.7, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = min_max_normalization(stns_z0, y_range=[0.4, 1.2])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
 
-        # w0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=20, loc=0)
-        # w1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=20, loc=0)
-        # w2 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=20, b=4, loc=0)
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.5, 1.8])
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.4, 1.2])
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
-        # peak = scipy.signal.find_peaks(stns_x0)[0][-1]
-        # stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_X - peak))
+        peak = scipy.signal.find_peaks(stns_x0)[0][-1]
+        stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-3, num=P.NUM_X - peak))
 
         stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=2, loc=0)  # a>b BIGGEST FURTHEST AWAY
         stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
@@ -73,12 +71,12 @@ class Waves_info:
                 stn_z = stns_z0[i]
                 stn_x = stns_x0[j]
                 stn_zx = 0.2 * stn_z + 0.8 * stn_x
-                _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
+                _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN  (i=0 => BOTTOM)
 
                 stn_z = stns_z1[i]
                 stn_x = stns_x1[j]
                 stn_zx = 0.2 * stn_z + 0.8 * stn_x
-                _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN
+                _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN (i=0 => BOTTOM)
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  '''
         _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
