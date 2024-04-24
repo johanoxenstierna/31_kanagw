@@ -74,6 +74,14 @@ def get_c_d(k0, d):
     return c_, d_
 
 
+def get_kanagawa_fractals():
+
+    R_ = {}
+
+    # imread
+
+
+
 def delete_old(PATH):
 
     _, _, all_file_names = os.walk(PATH).__next__()

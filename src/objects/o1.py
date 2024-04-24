@@ -23,7 +23,7 @@ class O1C(AbstractObject, AbstractSSS):
 
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
-        _s.type = type
+        # _s.type = type
         _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
         # ONLY OBJECTS THAT ARE MUTABLE ARE TO BE COPIED
 
@@ -131,5 +131,10 @@ class O1C(AbstractObject, AbstractSSS):
         _s.scale = min_max_normalization(_s.scale, y_range=[0.6, 1])
         # _s.scale = np.ones((len(o1.scale),))
         # o1.scale = np.ones((len(o1.scale),))
+
+    def gen_k(_s, o1f):
+
+        pass
+
 
 

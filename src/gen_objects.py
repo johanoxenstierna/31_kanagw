@@ -85,7 +85,9 @@ class GenObjects:
         inds_z = np.linspace(start=BOT_Z, stop=TOP_Z, num=P.NUM_Z, dtype=int)
 
         prep_k0.cut_k0(k0, inds_x, inds_z, d)
-        c_, d_ = prep_k0.get_c_d(k0, d)
+        b_, f_ = prep_k0.get_c_d(k0, d)
+        R_ = prep_k0.get_kanagawa_fractals()
+
         print("DIAMETER: " + str(d))
 
         for i in range(len(inds_x)):
@@ -111,17 +113,17 @@ class GenObjects:
                 b=foam moving backwards, f=forwards
                 Obs they need to have a lifetime linked with wave-periods. '''
 
-                type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
-                id_f_b = str(i) + '_' + str(j) + '_' + type
-                o1f_b = O1C(o1_id=id_f_b, pic=c_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1f_b.gen_b(o1)
-                O0['waves'].O1[id_f_b] = o1f_b
+                # type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
+                # id_f_b = str(i) + '_' + str(j) + '_' + type
+                # o1f_b = O1C(o1_id=id_f_b, pic=b_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                # o1f_b.gen_b(o1)
+                # O0['waves'].O1[id_f_b] = o1f_b
 
-                # type = 'f_f'  # NOT USED FOR SMALL ONES
-                # id_f_f = str(i) + '_' + str(j) + '_' + type
-                # o1f_f = O1C(o1_id=id_f_f, pic=d_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                # o1f_f.gen_f(o1)
-                # O0['waves'].O1[id_f_f] = o1f_f
+                type = 'f'  # NOT USED FOR SMALL ONES
+                id_f = str(i) + '_' + str(j) + '_' + type
+                o1f_f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1f_f.gen_f(o1)
+                O0['waves'].O1[id_f] = o1f_f
 
                 adf = 5
 

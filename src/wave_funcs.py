@@ -68,7 +68,7 @@ def gerstner_waves(o1, o0):
 	SS = [0]
 	# SS = [1]
 	# SS = [2]
-	# SS = [0, 2]
+	SS = [0, 2]
 	# if P.COMPLEXITY == 0:
 	# 	SS = [0, 3]
 	# elif P.COMPLEXITY == 1:
@@ -208,13 +208,13 @@ def gerstner_waves(o1, o0):
 		rotation = np.zeros(shape=(len(xy),))  # JUST FOR ROUND ONES
 	elif P.COMPLEXITY == 1:
 		'''T&R More neg values mean more counterclockwise'''
-		if len(SS) > 1:
-			if SS[0] == 2 and SS[1] == 3:  # ????
-				pass
-			else:
-				rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
-		else:
-			rotation = min_max_normalization(rotation, y_range=[-0.6, 0.6])
+		# if len(SS) > 1:
+		# 	if SS[0] == 2 and SS[1] == 3:  # ????
+		# 		pass
+		# 	else:
+		# 		rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
+		# else:
+		rotation = min_max_normalization(rotation, y_range=[-1, 1])
 
 	# scale = min_max_normalization(scale, y_range=[1, 1.3])
 	scale = min_max_normalization(scale, y_range=[0.99, 1.2])
@@ -285,43 +285,13 @@ def foam_f(o1):
 	if len(neg_inds) > 0:  # THIS IS NEEDED DUE TO peak_inds -= 10
 		peak_inds[neg_inds] = 0
 
-	'''MOVE THIS TO INSIDE LOOP'''
-	# if len(peak_inds) > 1:  # First ind will turn neg for some points
-	# 	if peak_inds[0] < 10:
-	# 		peak_inds = peak_inds[1:]
-	# 	peak_inds -= 10
-	# 	if len(np.where(peak_inds < 0)[0]) > 0:
-	# 		raise Exception("THIS IS NEEDED DUE TO peak_inds -= 10")
+	'''
+	Need to increase v with x and z. 
+	Wave breaks
+	Use o1 id
+	'''
 
-	# PEND DEL: its done in loop below instead
-	# pos_inds_x = np.where(xy_t[:, 0] > 0)[0]  # these are used for a later reset
-	# neg_inds_x = np.where(xy_t[:, 0] < 0)[0]  # these are used for a later reset
-	# pos_inds_y = np.where(xy_t[:, 1] > 0)[0]
-	# neg_inds_y = np.where(xy_t[:, 1] < 0)[0]
-
-	# aa = np.where((xy_t[:, 0] > 0) & (xy_t[:, 1] > 0))[0]
-	# xy_t[aa, 0] *= 2
-
-	# xy_t_min_x = np.min(xy_t[:, 0])
-	# xy_t_min_y = np.min(xy_t[:, 1])
-
-	# xy_t[:, 0] += abs(xy_t_min_x)  # 1
-	# xy_t[:, 1] += abs(xy_t_min_y)
-	#
-	# xy_t[:, 0] *= 3  # 2
-	# xy_t[:, 1] *= 2  # 2
-	#
-	# xy_t[:, 0] -= abs(xy_t_min_x) * 3
-	# xy_t[:, 1] -= abs(xy_t_min_y) * 2
-
-	# span_range = np.arange(start=np.min(xy_t[:, 1]), stop=np.max(xy_t[:, 1]), dtype=int)
-	# mults_x = np.linspace(start=1, stop=2, num=len(span_range))
-	#
-	# for i in range(len(xy_t)):
-	# 	y_val_at_i = xy_t[i, 1]
-	# 	qr = 5
-	#
-	# adf = 6
+	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
 
 	for i in range(len(peak_inds) - 1):
 		peak_ind0 = peak_inds[i]
@@ -364,12 +334,13 @@ def foam_f(o1):
 		# else:
 		# 	v_frame = 1.7
 		v_frame = (xy_tp0[1, 0] - xy_tp0[0, 0]) * 0.4
+		v_frame *= v_mult
 		# v_frame = xy_tp[1, 0] - xy_tp[0, 0]
 		# v_frame = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
 		# v_frame = 1.7
 		# v_frame = 2
-		if P.COMPLEXITY == 1:
-			v_frame = 0.35
+		# if P.COMPLEXITY == 1:
+		# 	v_frame = 0.35
 
 		# v = np.max(xy_tp[:, 1]) + abs(np.min(xy_tp))
 		# v = 1.7
@@ -380,12 +351,12 @@ def foam_f(o1):
 		FIRST NUM IS ONLY PROJ
 		SECOND NUM IS FOR RISING
 		'''
-		num = len(xy_tp) - y_max_ind  # OBS! This is where proj motion is used
+		num = len(xy_tp0) - y_max_ind  # OBS! This is where proj motion is used
 		xy_proj = np.zeros(shape=(num, 2))
 		v = v_frame * num
 		theta = 0
 		G = 9.8
-		h = (np.max(xy_tp[:, 1]) + abs(np.min(xy_tp))) * 2  # more, = more fall ALSO TO RIGHT
+		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0))) * 2.5  # more, = more fall ALSO TO RIGHT
 		# t_flight = (v * np.sin(theta) + np.sqrt((v * np.sin(theta)) ** 2 + 2 * G * h)) / G
 		t_flight = (np.sqrt(2 * G * h)) / G
 

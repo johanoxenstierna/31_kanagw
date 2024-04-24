@@ -16,8 +16,8 @@ class O0C(AbstractObject):
         _s.gi = gi  # IMPORTANT replaces _s.gi = ship_info
         _s.pic = pic  # NOT SCALED
         _s.O1 = {}
-        _s.O1b = {}
-        _s.O1f = {}
+        # _s.O1b = {}
+        # _s.O1f = {}
 
         _s.T = np.zeros(shape=(72, 128, gi.o1_gi['frames_tot']))
 

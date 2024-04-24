@@ -45,13 +45,13 @@ class Waves_info:
         _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
-        stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=3, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[0.4, 1.2])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
+        stns_z0 = min_max_normalization(stns_z0, y_range=[0.8, 1.2])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
-        stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
+        # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
 
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.4, 1.2])
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.9, 1.1])
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         peak = scipy.signal.find_peaks(stns_x0)[0][-1]
         stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-3, num=P.NUM_X - peak))
@@ -70,7 +70,7 @@ class Waves_info:
             for j in range(P.NUM_X):
                 stn_z = stns_z0[i]
                 stn_x = stns_x0[j]
-                stn_zx = 0.2 * stn_z + 0.8 * stn_x
+                stn_zx = 0.8 * stn_z + 0.2 * stn_x
                 _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN  (i=0 => BOTTOM)
 
                 stn_z = stns_z1[i]
@@ -85,6 +85,9 @@ class Waves_info:
         '''This is probably depr. Wave needs to break at left first, but below was used 
          to fix init_frame prob.'''
         _s.o1_left_starts_z = np.linspace(0.0000, 0.0001, num=P.NUM_Z)  # highest vs lowest one period diff
+
+        Z, X = np.mgrid[2:0.5:complex(0, P.NUM_Z), 0.5:5:complex(0, P.NUM_X)]
+        _s.vmult_zx = 0.5 * Z + 0.5 * X
 
         _s.o1_gi = _s.gen_o1_gi()
 
