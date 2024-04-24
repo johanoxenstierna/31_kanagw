@@ -49,9 +49,9 @@ def set_O1(o, ax_b, axs0):
 	"""
 
 	M = mtransforms.Affine2D(). \
-		rotate(o.rotation[o.clock]). \
 		scale(o.scale[o.clock]). \
-	    translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData
+		rotate(o.rotation[o.clock]). \
+		translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData
 
 	o.ax0.set_alpha(o.alphas[o.clock])
 	# o.ax0.set_zorder(deepcopy(int(o.zorder)))

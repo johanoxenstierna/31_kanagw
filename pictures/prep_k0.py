@@ -54,6 +54,18 @@ def cut_k0(k0, inds_x, inds_z, d=None):
             np.save(PATH_OUT + pic_key, pic)
 
 
+def delete_old(PATH):
+
+    _, _, all_file_names = os.walk(PATH).__next__()
+
+    removed_files = 0
+    for file_name_rem in all_file_names:
+        # print("removing " + str(file_name_rem))
+        os.remove(PATH + file_name_rem)
+        removed_files += 1
+    print("removed_files: " + str(removed_files))
+
+
 def get_c_d(k0, d):
     # c_ = k0[720:719 - d:-1, 100:100 + d, :]
     c_ = k0[720:719 - d:-1, 100:100 + d * 2, :]
@@ -76,19 +88,38 @@ def get_c_d(k0, d):
 
 def get_kanagawa_fractals():
 
+    """
+    Need to write conversion from pixels to NUM_Z, NUM_X
+    """
+
+    PATH_IN = './pictures/waves/R/'
+    _, _, all_file_names = os.walk(PATH_IN).__next__()
+
     R_ = {}
+    R_inds_used = []
 
-    # imread
+    ttt = imread(PATH_IN + '400_200' + '.png')
+    ttt = np.flipud(ttt)
+    R_['1_3'] = np.copy(ttt)
+    R_['1_10'] = np.copy(ttt)
+    R_['2_4'] = np.copy(ttt)
+    R_['2_14'] = np.copy(ttt)
+    R_['5_5'] = np.copy(ttt)
+    R_['5_12'] = np.copy(ttt)
+
+    R_inds_used.append((1, 3))  # z, x
+    R_inds_used.append((1, 10))  # z, x
+    R_inds_used.append((2, 4))  # z, x
+    R_inds_used.append((2, 14))  # z, x
+    R_inds_used.append((5, 5))  # z, x
+    R_inds_used.append((5, 12))  # z, x
+
+
+    return R_, R_inds_used
+
+def convert_pixels_to_grid():
+    pass
 
 
 
-def delete_old(PATH):
 
-    _, _, all_file_names = os.walk(PATH).__next__()
-
-    removed_files = 0
-    for file_name_rem in all_file_names:
-        # print("removing " + str(file_name_rem))
-        os.remove(PATH + file_name_rem)
-        removed_files += 1
-    print("removed_files: " + str(removed_files))

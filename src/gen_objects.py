@@ -10,6 +10,7 @@ import P as P
 from src.objects.o0 import O0C
 from src.objects.o1 import O1C
 # from src.objects.o2 import O2C
+from src.trig_functions import min_max_normalization
 from pictures import prep_k0
 
 
@@ -57,7 +58,7 @@ class GenObjects:
         that is shown needs to be explainable through the generated waves.
         """
 
-        '''THESE ARE TEMPORARY. REMOVE WHEN PADDING SORTED'''
+        '''THESE ARE TEMPORARY (haha no). REMOVE WHEN PADDING SORTED'''
 
         k0 = imread('./pictures/k0.png')
         k0 = np.flipud(k0)  # essential
@@ -81,22 +82,24 @@ class GenObjects:
             raise Exception("d too large")
 
         '''indexing has to be identical for prepping k0 cuts and generaing the o1 objects'''
-        inds_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
-        inds_z = np.linspace(start=BOT_Z, stop=TOP_Z, num=P.NUM_Z, dtype=int)
+        pxls_x = np.linspace(start=100, stop=1150, num=P.NUM_X, dtype=int)
+        pxls_z = np.linspace(start=BOT_Z, stop=TOP_Z, num=P.NUM_Z, dtype=int)
 
-        prep_k0.cut_k0(k0, inds_x, inds_z, d)
+        prep_k0.cut_k0(k0, pxls_x, pxls_z, d)
         b_, f_ = prep_k0.get_c_d(k0, d)
-        R_ = prep_k0.get_kanagawa_fractals()
+
+        '''KANAGAWA FRACTALS'''
+        R_, R_inds_used = prep_k0.get_kanagawa_fractals()
 
         print("DIAMETER: " + str(d))
 
-        for i in range(len(inds_x)):
-            for j in range(len(inds_z)):  # smallest ind = bottom
-                ind_x = inds_x[i]
-                ind_z = inds_z[j]
+        for i in range(P.NUM_X):
+            for j in range(P.NUM_Z):  # smallest ind = bottom
+                pxl_x = pxls_x[i]
+                pxl_z = pxls_z[j]
 
                 type = 'static'
-                file_name = str(ind_x) + '_' + str(ind_z) + '.npy'
+                file_name = str(pxl_x) + '_' + str(pxl_z) + '.npy'
                 id_static = str(i) + '_' + str(j) + '_' + type
                 if P.COMPLEXITY == 0:
                     # pic_static = _s.pics['O0']['waves']['O1']['d']
@@ -119,11 +122,28 @@ class GenObjects:
                 # o1f_b.gen_b(o1)
                 # O0['waves'].O1[id_f_b] = o1f_b
 
+                if i == 13 and j == 3:
+                    adf = 5
+
                 type = 'f'  # NOT USED FOR SMALL ONES
                 id_f = str(i) + '_' + str(j) + '_' + type
-                o1f_f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1f_f.gen_f(o1)
-                O0['waves'].O1[id_f] = o1f_f
+                o1f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1f.gen_f(o1)
+                O0['waves'].O1[id_f] = o1f
+
+                if (j, i) in R_inds_used:
+                    type = 'r'  # NOT USED FOR SMALL ONES
+                    id_r = str(i) + '_' + str(j) + '_' + type
+                    r_ = R_[str(j) + '_' + str(i)]
+                    o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
+                    o1r.gen_f(o1)
+                    # o1r.gen_r(o1)
+                    o1r.scale = min_max_normalization(o1r.scale, y_range=[0.99, 1.01])
+                    # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
+                    o1r.rotation *= 1.2
+                    # o1r.gen_r(o1f)
+                    O0['waves'].O1[id_r] = o1r
+                    o1r.zorder += 2000
 
                 adf = 5
 
@@ -133,67 +153,3 @@ class GenObjects:
 
         return O0
 
-    # def gen_O1(_s, O0):
-    #
-    #     """O1"""
-    #     for o0_id, o0 in O0.items():
-    #         # if 'O1' in o0.gi.child_names:
-    #         O1_pics = _s.pics['O0'][o0_id]['O1']  # OBS THEY ARE DUPLICATED
-    #         # sp_id_int = 0  # since there may be multiple f
-    #
-    #         '''OBS from o0s perspective they are a heap. This is good longterm to
-    #         instead use a tensor and scatter.'''
-    #         # for pic_key, pic in O1_pics.items():  # NUM_X.  Modulo needed here, or some way of selecting random
-    #
-    #         for x in range(P.NUM_X):
-    #
-    #             '''
-    #             This will be replaced later with sampling from a prepped image
-    #             '''
-    #             # if i % 2 == 0:
-    #             # pic_x_key = str(i) + '_' + 'a'
-    #             # pic = O1_pics['a']
-    #             # else:
-    #             # pic_key = 'b'
-    #             x_key = str(x)
-    #
-    #
-    #             # pic_f = O1_pics['d']  # one f for each. FOR NOW
-    #
-    #             for z in range(P.NUM_Z):  # ONLY Z enumerated!
-    #                 '''Start at bottom?'''
-    #                 # pic_enumer = pic_key.split('_')
-    #                 # pic_enumer = int(pic_enumer[-1])
-    #
-    #                 z_key = str(z)
-    #
-    #                 pic_key = 'b'
-    #                 type = 'static'
-    #                 id_static = x_key + '_' + z_key + '_' + type
-    #                 pic_static = O1_pics[pic_key]
-    #                 o1 = O1C(o1_id=id_static, pic=pic_static, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-    #                 o1.gen_static()
-    #                 o0.O1[id_static] = o1
-    #
-    #
-    #                 '''Each static has two f linked to it "o1" below.
-    #                 b=foam moving backwards, f=forwards
-    #                 Obs they need to have a lifetime linked with wave-periods. '''
-    #
-    #                 pic_key = 'c'
-    #                 type = 'f_b'
-    #                 id_f_b = x_key + '_' + z_key + '_' + type
-    #                 pic_f_b = O1_pics[pic_key]
-    #                 o1f_b = O1C(o1_id=id_f_b, pic=pic_f_b, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-    #                 o1f_b.gen_b(o1)
-    #                 o0.O1[id_f_b] = o1f_b
-    #
-    #                 # pic_key = 'd'
-    #                 # type = 'f_f'
-    #                 # id_f_f = x_key + '_' + z_key + '_' + type
-    #                 # pic_f_f = O1_pics[pic_key]
-    #                 # o1f_f = O1C(o1_id=id_f_f, pic=pic_f_f, o0=o0, type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-    #                 # o1f_f.gen_f(o1)
-    #                 # o0.O1[id_f_f] = o1f_f
-    #
-    #     return O0

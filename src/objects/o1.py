@@ -41,11 +41,10 @@ class O1C(AbstractObject, AbstractSSS):
         # elif P.COMPLEXITY == 1:
         _s.gi['ld'][0] += random.randint(-10, 10)
         _s.gi['ld'][1] += random.randint(-5, 5)
+
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
         # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
-
-
 
     def gen_scale_vector(_s):
 
@@ -132,9 +131,11 @@ class O1C(AbstractObject, AbstractSSS):
         # _s.scale = np.ones((len(o1.scale),))
         # o1.scale = np.ones((len(o1.scale),))
 
-    def gen_k(_s, o1f):
+    def gen_r(_s, o1):
 
-        pass
+        asdf = 5
+
+
 
 
 

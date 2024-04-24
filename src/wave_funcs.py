@@ -217,7 +217,7 @@ def gerstner_waves(o1, o0):
 		rotation = min_max_normalization(rotation, y_range=[-1, 1])
 
 	# scale = min_max_normalization(scale, y_range=[1, 1.3])
-	scale = min_max_normalization(scale, y_range=[0.99, 1.2])
+	scale = min_max_normalization(scale, y_range=[0.99, 1.5])
 
 	return xy, dxy, alphas, rotation, peaks, xy0, dxy0, xy1, dxy1, xy2, dxy2, scale
 
@@ -272,13 +272,13 @@ def foam_f(o1):
 
 	# rotation0 = np.copy(o1.dxy0[:, 1])
 
-	rotation0 = np.zeros((len(o1.xy),))  # CALCULATED HERE
+	rotation0 = np.full((len(o1.xy)), fill_value=-0.1)  # CALCULATED HERE
 	alphas = np.full(shape=(len(xy_t),), fill_value=0.0)
 
 	'''OBS height SUPER IMPORTANT TO AVOID 2 GETTING f '''
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
-	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=25, distance=10)[0]  # OBS 20 needs tuning!!!
+	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
 	'''Below DEPRECATED probably need to be PERCENTAGE'''
 	peak_inds -= 10  # neg mean that they will start before the actual peak
 	neg_inds = np.where(peak_inds < 0)[0]
@@ -292,6 +292,7 @@ def foam_f(o1):
 	'''
 
 	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
+	h_mult = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
 
 	for i in range(len(peak_inds) - 1):
 		peak_ind0 = peak_inds[i]
@@ -302,12 +303,11 @@ def foam_f(o1):
 		xy_tp = xy_t[peak_ind0:peak_ind1]  # xy_tp: xy coords time between peaks
 		xy_tp0 = xy_t0[peak_ind0:peak_ind1]  # xy_tp: xy coords time between peaks
 
-		rotation_tp0 = np.sin(np.linspace(0, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
+		rotation_tp0 = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
+		# rotation_tp0 = np.sin(np.linspace(-0.1, -0.11, num=int(peak_ind1 - peak_ind0)))
 
-		# rotation_tp0 = min_max_normalization(rotation_tp0, y_range=[-0.2 * np.pi, 0.2 * np.pi])
-		# rotation_tp0 = min_max_normalization(rotation_tp0, y_range=[-0.2 * np.pi, 0.2 * np.pi])
-		# rotation_tp0 = np.sin(rotation_tp0)
 		rotation0[peak_ind0:peak_ind1] = rotation_tp0
+		# rotation0[peak_ind0:peak_ind1] = np.full(shape=(int(peak_ind1 - peak_ind0),), fill_value=0.1)
 
 
 		'''
@@ -324,26 +324,11 @@ def foam_f(o1):
 		y_min_ind = np.argmin(xy_tp[:, 1])
 		y_max_ind = np.argmax(xy_tp0[:, 1])
 
-		start_x = xy_tp[y_max_ind, 0]
-		start_y = xy_tp[y_max_ind, 1]
+		start_x = xy_tp0[y_max_ind, 0]
+		start_y = xy_tp0[y_max_ind, 1]
 
-		# if y_max_ind + 1 < len(xy_tp):
-		# 	v_frame = xy_tp[y_max_ind + 1, 0] - xy_tp[y_max_ind, 0]
-		# elif y_max_ind > 0:
-		# 	v_frame = xy_tp[y_max_ind, 0] - xy_tp[y_max_ind - 1, 0]
-		# else:
-		# 	v_frame = 1.7
 		v_frame = (xy_tp0[1, 0] - xy_tp0[0, 0]) * 0.4
 		v_frame *= v_mult
-		# v_frame = xy_tp[1, 0] - xy_tp[0, 0]
-		# v_frame = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
-		# v_frame = 1.7
-		# v_frame = 2
-		# if P.COMPLEXITY == 1:
-		# 	v_frame = 0.35
-
-		# v = np.max(xy_tp[:, 1]) + abs(np.min(xy_tp))
-		# v = 1.7
 
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
@@ -356,7 +341,11 @@ def foam_f(o1):
 		v = v_frame * num
 		theta = 0
 		G = 9.8
-		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0))) * 2.5  # more, = more fall ALSO TO RIGHT
+
+		# TODO: h should be larger when wave is closer.
+		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0))) * 2  # more, = more fall ALSO TO RIGHT
+		h *= h_mult
+
 		# t_flight = (v * np.sin(theta) + np.sqrt((v * np.sin(theta)) ** 2 + 2 * G * h)) / G
 		t_flight = (np.sqrt(2 * G * h)) / G
 
@@ -409,52 +398,6 @@ def foam_f(o1):
 		# 	alphas[peak_ind0 - 20:peak_ind1 - 20] = alpha_mask_t
 		# else:
 		alphas[peak_ind0:peak_ind1] = alpha_mask_t
-
-	# rotation0 = min_max_normalization(rotation0, y_range=[-0.2 * np.pi, 0.2 * np.pi])
-
-	# bb = 5
-
-	aa = 5
-
-	# xy_t[pos_inds_x, 0] *= 2
-	# xy_t[neg_inds_x, 0] = o1.xy_t[neg_inds_x, 0]
-	# xy_t[neg_inds_y, 1] = o1.xy_t[neg_inds_y, 1]
-
-	# shift = np.full(shape=(o1.xy.shape), fill_value=[o1.xy[o1f_f.gi['init_frames'][0], 0],
-	#                                                 o1.xy[o1f_f.gi['init_frames'][0], 1]])  # THIS WILL CHANGE TO START AT INDEX (prob)
-	#
-	# xy = np.copy(xy_t)
-	# xy[:, :] += shift
-	# xy += xy_t
-
-	# alphas = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=10, loc=0)
-	# alphas = min_max_normalization(alphas, y_range=[0.99, 0.99])
-
-	# o1.xy[i_f:i_f + len(xy_f), 1] -= 0.5  # not gonna work here cuz this is only gonna affect next wave. SOLUTION: use steepness
-
-	# if o1.id != '15_b_0':2
-	# 	alphas = np.zeros(shape=(o1f_f.gi['frames_tot'],))
-
-	# PEND DEL NO!: Its too complicated to create a new circle from nothing perhaps.
-	# thetas = np.linspace(0, 10*np.pi, num=50)
-	# thetas = np.linspace(0.6 * np.pi, -1 * np.pi, num=o1f_f.gi['frames_tot'])
-	# add_x = np.linspace(50, 500, num=o1f_f.gi['frames_tot'])  # TODO
-	# add_y = np.linspace(-10, -200, num=o1f_f.gi['frames_tot'])  # # minus is DOWN
-	# radiuss = np.linspace(25, 1, num=o1f_f.gi['frames_tot'])
-	# radiuss = beta.pdf(x=np.linspace(0, 1, o1f_f.gi['frames_tot']), a=2, b=5, loc=0)
-	# radiuss = min_max_normalization(radiuss, y_range=[5, 50])
-
-	# for theta in np.linspace(0, 10*np.pi):
-	# for i in range(o1f_f.gi['frames_tot']):
-	# 	theta = thetas[i]
-	#
-	# 	# r = o1.gi['frames_tot'] - i  # radius
-	# 	r = radiuss[i]  # displacement per frame
-	#
-	# 	# xy_f[i, 0] = r * np.cos(theta) #+ add_x[i]
-	# 	# xy_f[i, 1] = r * np.sin(theta) #+ add_y[i]
-	#
-	# 	# y = gi['v'] * np.sin(gi['theta']) * t_lin - 0.5 * G * t_lin ** 2
 
 	return xy_t0, alphas, rotation0
 
