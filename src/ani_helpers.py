@@ -48,6 +48,8 @@ def set_O1(o, ax_b, axs0):
 	but it will add another ax to axs0
 	"""
 
+	'''TODO: object might need to be rotated around center instead of corner
+	CHECK rotate_around, rotate TAKES ARGS'''
 	M = mtransforms.Affine2D(). \
 		scale(o.scale[o.clock]). \
 		rotate(o.rotation[o.clock]). \

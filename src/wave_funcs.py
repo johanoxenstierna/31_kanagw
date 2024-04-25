@@ -214,10 +214,10 @@ def gerstner_waves(o1, o0):
 		# 	else:
 		# 		rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
 		# else:
-		rotation = min_max_normalization(rotation, y_range=[-1, 1])
+		rotation = min_max_normalization(rotation, y_range=[-1.4, 1.4])
 
 	# scale = min_max_normalization(scale, y_range=[1, 1.3])
-	scale = min_max_normalization(scale, y_range=[0.99, 1.5])
+	scale = min_max_normalization(scale, y_range=[0.99, 1.1])
 
 	return xy, dxy, alphas, rotation, peaks, xy0, dxy0, xy1, dxy1, xy2, dxy2, scale
 
@@ -278,7 +278,7 @@ def foam_f(o1):
 	'''OBS height SUPER IMPORTANT TO AVOID 2 GETTING f '''
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
-	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
+	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=40, distance=10)[0]  # OBS 20 needs tuning!!!
 	'''Below DEPRECATED probably need to be PERCENTAGE'''
 	peak_inds -= 10  # neg mean that they will start before the actual peak
 	neg_inds = np.where(peak_inds < 0)[0]
@@ -344,7 +344,7 @@ def foam_f(o1):
 
 		# TODO: h should be larger when wave is closer.
 		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0))) * 2  # more, = more fall ALSO TO RIGHT
-		h *= h_mult
+		h = 0.8 * h + 0.2 * h_mult
 
 		# t_flight = (v * np.sin(theta) + np.sqrt((v * np.sin(theta)) ** 2 + 2 * G * h)) / G
 		t_flight = (np.sqrt(2 * G * h)) / G
