@@ -38,7 +38,7 @@ class Waves_info:
         _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         if P.COMPLEXITY == 1:
-            _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+            _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
@@ -46,7 +46,7 @@ class Waves_info:
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[0.1, 4])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = min_max_normalization(stns_z0, y_range=[2, 4])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
 
@@ -54,7 +54,7 @@ class Waves_info:
         stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 4])
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         peak = scipy.signal.find_peaks(stns_x0)[0][-1]
-        stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-6, num=P.NUM_X - peak))
+        stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-10, num=P.NUM_X - peak))
 
         stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=2, loc=0)  # a>b BIGGEST FURTHEST AWAY
         stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
@@ -70,7 +70,7 @@ class Waves_info:
             for j in range(P.NUM_X):
                 stn_z = stns_z0[i]
                 stn_x = stns_x0[j]
-                stn_zx = 0.7 * stn_z + 0.3 * stn_x
+                stn_zx = 0.5 * stn_z + 0.5 * stn_x
                 _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN  (i=0 => BOTTOM)
 
                 stn_z = stns_z1[i]
@@ -84,8 +84,11 @@ class Waves_info:
         _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
         # _s.h_mult = np.geomspace(1, 0.1, num=P.NUM_Z)
 
-        '''OBS MAKING H SMALL IS ALSO SLOWING X MOVEMENT'''
-        _s.h_mult = _s.stns_zx0
+        '''
+        OBS MAKING H SMALL IS ALSO SLOWING X MOVEMENT
+        UPDATE: BASING H_MULT ON STNS DOESNT MAKE SENSE SINCE F USE STNS ANYWAY
+        '''
+        # _s.h_mult = np.copy(_s.stns_zx0) * 0.2
         # aa = np.linspace(start=1, stop=0)
 
         # NEEDS TO BE ALIGNED WITH X TOO

@@ -122,9 +122,6 @@ class GenObjects:
                 # o1f_b.gen_b(o1)
                 # O0['waves'].O1[id_f_b] = o1f_b
 
-                if i == 13 and j == 3:
-                    adf = 5
-
                 type = 'f'  # NOT USED FOR SMALL ONES
                 id_f = str(i) + '_' + str(j) + '_' + type
                 o1f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?

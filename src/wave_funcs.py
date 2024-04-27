@@ -204,17 +204,17 @@ def gerstner_waves(o1, o0):
 		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[ALPHA_LOW_BOUND, ALPHA_UP_BOUND])  # [0.5, 1]
 		alphas[peak_ind0:peak_ind1] = alpha_mask_t
 
-	if P.COMPLEXITY == 0:
-		rotation = np.zeros(shape=(len(xy),))  # JUST FOR ROUND ONES
-	elif P.COMPLEXITY == 1:
-		'''T&R More neg values mean more counterclockwise'''
-		# if len(SS) > 1:
-		# 	if SS[0] == 2 and SS[1] == 3:  # ????
-		# 		pass
-		# 	else:
-		# 		rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
-		# else:
-		rotation = min_max_normalization(rotation, y_range=[-1.4, 1.4])
+	# if P.COMPLEXITY == 0:
+	# 	rotation = np.zeros(shape=(len(xy),))  # JUST FOR ROUND ONES
+	# elif P.COMPLEXITY == 1:
+	# 	'''T&R More neg values mean more counterclockwise'''
+	# 	# if len(SS) > 1:
+	# 	# 	if SS[0] == 2 and SS[1] == 3:  # ????
+	# 	# 		pass
+	# 	# 	else:
+	# 	# 		rotation = min_max_normalization(rotation, y_range=[-0.2 * np.pi, 0.2 * np.pi])
+	# 	# else:
+	rotation = min_max_normalization(rotation, y_range=[-1, 1])
 
 	# scale = min_max_normalization(scale, y_range=[1, 1.3])
 	scale = min_max_normalization(scale, y_range=[0.99, 1.1])
@@ -278,7 +278,7 @@ def foam_f(o1):
 	'''OBS height SUPER IMPORTANT TO AVOID 2 GETTING f '''
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
-	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=40, distance=10)[0]  # OBS 20 needs tuning!!!
+	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=45, distance=10)[0]  # OBS 20 needs tuning!!!
 	'''Below DEPRECATED probably need to be PERCENTAGE'''
 	peak_inds -= 10  # neg mean that they will start before the actual peak
 	neg_inds = np.where(peak_inds < 0)[0]
@@ -289,6 +289,8 @@ def foam_f(o1):
 	Need to increase v with x and z. 
 	Wave breaks
 	Use o1 id
+	
+	NEW: Now that we have peaks, we can go back to using t instead of t0
 	'''
 
 	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
@@ -304,7 +306,7 @@ def foam_f(o1):
 		xy_tp0 = xy_t0[peak_ind0:peak_ind1]  # xy_tp: xy coords time between peaks
 
 		rotation_tp0 = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
-		# rotation_tp0 = np.sin(np.linspace(-0.1, -0.11, num=int(peak_ind1 - peak_ind0)))
+		# rotation_tp0 = np.sin(np.linspace(-0.001, -0.6, num=int(peak_ind1 - peak_ind0)))
 
 		rotation0[peak_ind0:peak_ind1] = rotation_tp0
 		# rotation0[peak_ind0:peak_ind1] = np.full(shape=(int(peak_ind1 - peak_ind0),), fill_value=0.1)
@@ -324,11 +326,15 @@ def foam_f(o1):
 		y_min_ind = np.argmin(xy_tp[:, 1])
 		y_max_ind = np.argmax(xy_tp0[:, 1])
 
-		start_x = xy_tp0[y_max_ind, 0]
-		start_y = xy_tp0[y_max_ind, 1]
+		# start_x = xy_tp0[y_max_ind, 0]
+		# start_y = xy_tp0[y_max_ind, 1]
 
-		v_frame = (xy_tp0[1, 0] - xy_tp0[0, 0]) * 0.4
-		v_frame *= v_mult
+		start_x = xy_tp[y_max_ind, 0]
+		start_y = xy_tp[y_max_ind, 1]
+
+		'''This v is too high'''
+		v_frame = (xy_tp0[1, 0] - xy_tp0[0, 0]) * 0.2  # perhaps should be zero?
+		# v_frame *= v_mult
 
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
@@ -339,12 +345,15 @@ def foam_f(o1):
 		num = len(xy_tp0) - y_max_ind  # OBS! This is where proj motion is used
 		xy_proj = np.zeros(shape=(num, 2))
 		v = v_frame * num
-		theta = 0
+		theta = 0.01 * np.pi  # obs flipped?
 		G = 9.8
 
-		# TODO: h should be larger when wave is closer.
-		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0))) * 2  # more, = more fall ALSO TO RIGHT
-		h = 0.8 * h + 0.2 * h_mult
+		'''
+		xy_tp0 gives all highs and lows from stns!
+		if h_mult is to be used it should not use stns
+		'''
+		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0)))  # OBS HACK BELOW more, = more fall ALSO TO RIGHT
+		# h *= h_mult
 
 		# t_flight = (v * np.sin(theta) + np.sqrt((v * np.sin(theta)) ** 2 + 2 * G * h)) / G
 		t_flight = (np.sqrt(2 * G * h)) / G
@@ -352,6 +361,7 @@ def foam_f(o1):
 		t_lin = np.linspace(0, t_flight, num)
 		xy_proj[:, 0] = v * np.cos(theta) * t_lin
 		xy_proj[:, 1] = v * np.sin(theta) * 2 * t_lin - 0.5 * G * t_lin ** 2
+		xy_proj[:, 1] -= 0.7 * G * t_lin ** 2
 
 		xy_proj[:, 0] += start_x
 		xy_proj[:, 1] += start_y
@@ -391,7 +401,7 @@ def foam_f(o1):
 		# 	alpha_UB = 0.1
 
 		# alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=2, b=1.8, loc=0)  # OBS THESE INCLUDE EVERYTHING
-		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=1.5, b=2.5, loc=0)  # ONLY FIRST PART
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=1.5, b=3, loc=0)  # ONLY FIRST PART
 		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[0.0, alpha_UB])
 
 		# if peak_ind0 > 20:
