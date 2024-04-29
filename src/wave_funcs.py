@@ -62,8 +62,6 @@ def gerstner_waves(o1, o0):
 	x = o1.gi['ld'][0]
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-
-
 	SS = [0, 1, 2]
 	SS = [0]
 	# SS = [1]
@@ -259,12 +257,12 @@ def foam_b(o1, peak_inds):
 
 def foam_f(o1):
 	"""
-	peak_inds: they are now just imported from static
 	New idea: Everything between start and start + num is available.
 	So use everything and then just move object to next peak by shift.
-	Instead of setting alpha as beta with early peak, set peak to middle and
 
 	"""
+
+	EARLINESS_SHIFT = 10
 
 	xy_t = np.copy(o1.xy_t)
 	xy_t0 = np.copy(o1.xy_t0)
@@ -272,18 +270,20 @@ def foam_f(o1):
 
 	# rotation0 = np.copy(o1.dxy0[:, 1])
 
-	rotation0 = np.full((len(o1.xy)), fill_value=-0.1)  # CALCULATED HERE
+	rotation0 = np.full((len(o1.xy)), fill_value=-0.0001)  # CALCULATED HERE
 	alphas = np.full(shape=(len(xy_t),), fill_value=0.0)
 
-	'''OBS height SUPER IMPORTANT TO AVOID 2 GETTING f '''
+	'''
+	Peaks found using xy_t
+	But v and h found using xy_t0
+	'''
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=20, distance=50)[0]  # OBS 20 needs tuning!!!
 	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=15, distance=10)[0]  # OBS 20 needs tuning!!!
-	peak_inds = scipy.signal.find_peaks(xy_t0[:, 1], height=45, distance=10)[0]  # OBS 20 needs tuning!!!
-	'''Below DEPRECATED probably need to be PERCENTAGE'''
-	peak_inds -= 10  # neg mean that they will start before the actual peak
+	peak_inds = scipy.signal.find_peaks(xy_t[:, 1], height=70, distance=10)[0]  # OBS 20 needs tuning!!!
+	peak_inds -= EARLINESS_SHIFT  # neg mean that they will start before the actual peak
 	neg_inds = np.where(peak_inds < 0)[0]
 	if len(neg_inds) > 0:  # THIS IS NEEDED DUE TO peak_inds -= 10
-		peak_inds[neg_inds] = 0
+		peak_inds = peak_inds[neg_inds[-1] + 1:]  # dont use neg inds
 
 	'''
 	Need to increase v with x and z. 
@@ -291,26 +291,30 @@ def foam_f(o1):
 	Use o1 id
 	
 	NEW: Now that we have peaks, we can go back to using t instead of t0
+	Conjecture: Have to pick EITHER tp OR tp0 below. 
 	'''
 
 	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
 	h_mult = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
 
 	for i in range(len(peak_inds) - 1):
+
 		peak_ind0 = peak_inds[i]
 		peak_ind1 = peak_inds[i + 1]
+
 		# mid_ind = int(peak_ind1 - peak_ind0)
 
 		'''OBS THIS WRITES TO xy_t STRAIGHT'''
-		xy_tp = xy_t[peak_ind0:peak_ind1]  # xy_tp: xy coords time between peaks
-		xy_tp0 = xy_t0[peak_ind0:peak_ind1]  # xy_tp: xy coords time between peaks
+		# xy_tp = np.copy(xy_t[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
+		xy_tp0 = np.copy(xy_t0[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
 
-		rotation_tp0 = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
+		# rotation_tp0 = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
+		rotation_tp0 = np.sin(np.linspace(-0.001, -0.002 * np.pi, num=int(peak_ind1 - peak_ind0)))
 		# rotation_tp0 = np.sin(np.linspace(-0.001, -0.6, num=int(peak_ind1 - peak_ind0)))
 
 		rotation0[peak_ind0:peak_ind1] = rotation_tp0
-		# rotation0[peak_ind0:peak_ind1] = np.full(shape=(int(peak_ind1 - peak_ind0),), fill_value=0.1)
 
+		# rotation0[peak_ind0:peak_ind1] = np.full(shape=(int(peak_ind1 - peak_ind0),), fill_value=0.1)
 
 		'''
 		Generating the break motion by scaling up the Gersner rotation
@@ -319,94 +323,101 @@ def foam_f(o1):
 		New thing: Instead of multiplying Gerstner circle with constant, 
 		its much cleaner to extract v at top of wave and then generating a projectile motion. 
 		BUT, this only works for downward motion
-		
 		'''
 
-		x_max_ind = np.argmax(xy_tp[:, 0])
-		y_min_ind = np.argmin(xy_tp[:, 1])
+		x_max_ind = np.argmax(xy_tp0[:, 0])
 		y_max_ind = np.argmax(xy_tp0[:, 1])
+		y_min_ind = np.argmin(xy_tp0[:, 1])
+
+		assert(y_max_ind < y_min_ind)
+		assert(y_max_ind < x_max_ind)
 
 		# start_x = xy_tp0[y_max_ind, 0]
 		# start_y = xy_tp0[y_max_ind, 1]
 
-		start_x = xy_tp[y_max_ind, 0]
-		start_y = xy_tp[y_max_ind, 1]
+		# start_x = xy_tp[y_max_ind, 0]
+		# start_y = xy_tp[y_max_ind, 1]
 
-		'''This v is too high'''
-		v_frame = (xy_tp0[1, 0] - xy_tp0[0, 0]) * 0.2  # perhaps should be zero?
+		''''''
+		v_frame = (xy_tp0[y_max_ind + 1, 0] - xy_tp0[y_max_ind, 0])   # perhaps should be zero bcs xy_tp already includes all v that is needed?
+		v_frame *= 1
 		# v_frame *= v_mult
 
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
 		TODO: NUM SHOULD BE SPLIT INTO TWO PARTS
-		FIRST NUM IS ONLY PROJ
-		SECOND NUM IS FOR RISING
+		NUM_P IS ONLY PROJ
+		NUM_B IS FOR RISING
+		TODO: CHANGE FROM Y_MIN_IND TO X_MAX_IND
 		'''
-		num = len(xy_tp0) - y_max_ind  # OBS! This is where proj motion is used
-		xy_proj = np.zeros(shape=(num, 2))
-		v = v_frame * num
-		theta = 0.01 * np.pi  # obs flipped?
+		# num_a = len(xy_tp0) - y_max_ind  # OBS! This is where proj motion is used
+		num_p = len(xy_tp0[y_max_ind:x_max_ind])  # OBS! This is where proj motion is used
+		num_b = len(xy_tp0[x_max_ind:])  # OBS! This is where proj motion is used
+
+		xy_proj = np.zeros(shape=(num_p, 2))
+		xy_b = np.zeros(shape=(num_b, 2))
+		xy_b[:, 0] = v_frame
+
+		v = v_frame  #* num
+		theta_p = 0.01 * np.pi  # obs flipped? Increase to turn up
+		'''
+		pi = bug, 2 pi = bug, 0.5 pi = straight up, 0.25 pi = 45 deg, 0.4 pi = more up, 0.1 pi = more horiz.
+		Flipping doesn't change any here. 
+		'''
+		theta_b = 0.3  # np.random.normal(loc=0.25, scale=0.1) * np.pi
+		theta_b_flip_y = 1  # np.random.choice([-1, 1], p=[0.2, 0.8])
 		G = 9.8
 
 		'''
 		xy_tp0 gives all highs and lows from stns!
 		if h_mult is to be used it should not use stns
+		OBS this h is ADDED to h that is already in Gerstner. So needs to be small
 		'''
-		h = (np.max(xy_tp0[:, 1]) + abs(np.min(xy_tp0)))  # OBS HACK BELOW more, = more fall ALSO TO RIGHT
+		h = xy_tp0[y_max_ind, 1] - xy_tp0[x_max_ind, 1]  # OBS HACK BELOW more, = more fall ALSO TO RIGHT
+		assert(h > 0)
+		h *= 1.1
 		# h *= h_mult
 
 		# t_flight = (v * np.sin(theta) + np.sqrt((v * np.sin(theta)) ** 2 + 2 * G * h)) / G
-		t_flight = (np.sqrt(2 * G * h)) / G
+		t_flight_p = (np.sqrt(2 * G * h)) / G
+		# t_flight_b = (v * np.sin(theta_b) + np.sqrt((v * np.sin(theta_b)) ** 2 + 2 * G * h)) / G  # CANNOT RETURN TO GROUND
+		t_flight_b = 2 * v * np.sin(theta_b) / G
 
-		t_lin = np.linspace(0, t_flight, num)
-		xy_proj[:, 0] = v * np.cos(theta) * t_lin
-		xy_proj[:, 1] = v * np.sin(theta) * 2 * t_lin - 0.5 * G * t_lin ** 2
-		xy_proj[:, 1] -= 0.7 * G * t_lin ** 2
+		t_lin_p = np.linspace(0, t_flight_p, num_p)
+		t_lin_b = np.linspace(0, t_flight_b, num_b)
 
-		xy_proj[:, 0] += start_x
-		xy_proj[:, 1] += start_y
+		xy_proj[:, 0] = v * np.cos(theta_p) * t_lin_p
+		xy_proj[:, 1] = v * np.sin(theta_p) * 2 * t_lin_p - 0.5 * G * t_lin_p ** 2
+		# xy_proj[:, 1] -= 1 * G * t_lin ** 2
 
-		xy_tp0[y_max_ind:, :] = xy_proj
+		xy_b[:, 0] = v * np.cos(theta_b) * t_lin_b
+		xy_b[:, 1] = theta_b_flip_y * v * np.sin(theta_b) * 2 * t_lin_b - 0.5 * G * t_lin_b ** 2
 
+		# xy_b += 1
+		xy_b[:, 0] *= 50
+		xy_b[:, 1] *= 120
+		# xy_b[:, 1] = t_flight = 4 * gi['v'] * np.sin(gi['theta']) / G
 
-		# x_end = xy_tp[len(xy_tp) * 1.7
+		# xy_proj[:, 0] += start_x
+		# xy_proj[:, 1] += start_y
 
-		# mult_x = np.linspace(start=1, stop=2, num=len(xy_tp))
-		# mult_y = -beta.pdf(x=np.linspace(0, 1, num=len(xy_tp)), a=1.5, b=1.5, loc=0)
-		# mult_y = min_max_normalization(mult_y, y_range=[0.5, 1])
-		#
-		# xy_tp[:, 0] *= mult_x
-		# xy_tp[:, 1] *= mult_y
-		#
-		# x_max_ind = np.argmax(xy_tp[:, 0])
-		# y_min_ind = np.argmin(xy_tp[:, 1])
-		#
-		# xy_tp[x_max_ind:, 0] = xy_tp[x_max_ind, 0]
-		#
-		# y_desc = np.linspace(start=xy_tp[x_max_ind, 1], stop=xy_tp[y_min_ind, 1], num=len(xy_tp) - x_max_ind)
-		# xy_tp[x_max_ind:, 1] = y_desc
-		#
-		# xy_t[peak_ind0:peak_ind1, :] = xy_tp
+		# xy_tp0[y_max_ind:, :] = xy_proj  # Old. Setting is more difficult than shifting?
+		# xy_t0[y_max_ind:y_max_ind + num, :] += xy_proj  # BUG: Cant use y_max_ind HERE!!!
+		# xy_t0[peak_ind0 + y_max_ind:peak_ind0 + y_max_ind + num_p, :] += xy_proj  # NEW: Its a shift. Conceptually easier than a reset.
+		xy_t0[peak_ind0 + y_max_ind:peak_ind0 + x_max_ind, :] += xy_proj
 
-		# alpha_mask_t = beta.pdf(x=np.linspace(0, 1, num), a=4, b=20, loc=0)
+		start_xy_b = xy_t0[peak_ind0 + x_max_ind - 1, :]
+		# start_v_b = xy_t0[peak_ind0 + x_max_ind - 1, :]
+		xy_b += start_xy_b
+		# xy_t0[peak_ind0 + y_min_ind:peak_ind1, 1] += xy_b[:, 1]
+		xy_t0[peak_ind0 + x_max_ind:peak_ind1, :] = xy_b
+		# xy_t0[peak_ind0 + x_max_ind:peak_ind1, 1] *= -1  # madness
 
-		# peak_ind0a = peak_ind0
-		# len_extra = 0
-		# if peak_ind0a > 20:
-		# 	peak_ind0a -= 20
-		# 	len_extra = 20
-
+		'''Alpha does not use any y_max or y_min inds'''
 		alpha_UB = 1
-		# PEND DELif h < 300 and P.COMPLEXITY:
-		# 	alpha_UB = 0.1
-
-		# alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=2, b=1.8, loc=0)  # OBS THESE INCLUDE EVERYTHING
-		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=1.5, b=3, loc=0)  # ONLY FIRST PART
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=2, loc=0)  # ONLY FIRST PART
 		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[0.0, alpha_UB])
 
-		# if peak_ind0 > 20:
-		# 	alphas[peak_ind0 - 20:peak_ind1 - 20] = alpha_mask_t
-		# else:
 		alphas[peak_ind0:peak_ind1] = alpha_mask_t
 
 	return xy_t0, alphas, rotation0

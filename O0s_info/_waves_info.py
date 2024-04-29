@@ -50,7 +50,7 @@ class Waves_info:
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
 
-        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
+        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=10, b=10, loc=0)
         stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 4])
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         peak = scipy.signal.find_peaks(stns_x0)[0][-1]

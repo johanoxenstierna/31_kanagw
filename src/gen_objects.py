@@ -128,19 +128,19 @@ class GenObjects:
                 o1f.gen_f(o1)
                 O0['waves'].O1[id_f] = o1f
 
-                if (j, i) in R_inds_used:
-                    type = 'r'  # NOT USED FOR SMALL ONES
-                    id_r = str(i) + '_' + str(j) + '_' + type
-                    r_ = R_[str(j) + '_' + str(i)]
-                    o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
-                    o1r.gen_f(o1)
-                    # o1r.gen_r(o1)
-                    o1r.scale = min_max_normalization(o1r.scale, y_range=[0.99, 1.3])
-                    # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
-                    o1r.rotation *= 1.4
-                    # o1r.gen_r(o1f)
-                    O0['waves'].O1[id_r] = o1r
-                    # o1r.zorder += 2000
+                # if (j, i) in R_inds_used:  # totally ok to have inds too large: they just wont appear in smaller animation
+                #     type = 'r'  # NOT USED FOR SMALL ONES
+                #     id_r = str(i) + '_' + str(j) + '_' + type
+                #     r_ = R_[str(j) + '_' + str(i)]
+                #     o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
+                #     o1r.gen_f(o1)
+                #     # o1r.gen_r(o1)
+                #     o1r.scale = min_max_normalization(o1r.scale, y_range=[0.99, 1.3])
+                #     # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
+                #     o1r.rotation *= 1.4
+                #     # o1r.gen_r(o1f)
+                #     O0['waves'].O1[id_r] = o1r
+                #     # o1r.zorder += 2000
 
                 adf = 5
 
