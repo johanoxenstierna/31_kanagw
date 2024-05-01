@@ -313,17 +313,17 @@ def foam_f(o1):
 		# mid_ind = int(peak_ind1 - peak_ind0)
 
 		'''OBS THIS WRITES TO xy_t STRAIGHT'''
-		# xy_tp = np.copy(xy_t[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
+		xy_tp = np.copy(xy_t[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
 		xy_tp0 = np.copy(xy_t0[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
 
 		if len(xy_tp0) < MIN_DIST_FRAMES_BET_WAVES:
 			raise Exception("W   T   F")
 
-		rotation_tp0 = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
+		rotation_tp = np.sin(np.linspace(-0.001, -0.5 * np.pi, num=int(peak_ind1 - peak_ind0)))
 		# rotation_tp0 = np.sin(np.linspace(-0.001, -0.002 * np.pi, num=int(peak_ind1 - peak_ind0)))
 		# rotation_tp0 = np.sin(np.linspace(-0.001, -0.6, num=int(peak_ind1 - peak_ind0)))
 
-		rotation0[peak_ind0:peak_ind1] = rotation_tp0
+		rotation0[peak_ind0:peak_ind1] = rotation_tp
 
 		# rotation0[peak_ind0:peak_ind1] = np.full(shape=(int(peak_ind1 - peak_ind0),), fill_value=0.1)
 
@@ -338,9 +338,12 @@ def foam_f(o1):
 
 		# y_max_ind = int(len(xy_tp0) * 0.1)
 		y_max_ind = EARLINESS_SHIFT
+		y_max = xy_tp[y_max_ind, 1]
 		# x_max_ind = np.argmax(xy_tp0[:, 0])  # DOESNT WORK WITH MULTIPLE WAVES. TODO: USE PI INSTEAD
 		# x_max_ind = EARLINESS_SHIFT + int((len(xy_tp0) - EARLINESS_SHIFT) * 0.2)  # DOESNT WORK WITH MULTIPLE WAVES. TODO: USE PI INSTEAD
-		# y_min_ind = np.argmin(xy_tp0[:, 1])
+		y_min_ind = np.argmin(xy_tp[:, 1])
+		y_min = xy_tp[y_min_ind, 1]
+		y_peak_ind1 = xy_tp[-1, 1]
 
 		'''This can happen if peak thresholds are too large'''
 		# if y_max_ind >= y_min_ind:
@@ -415,17 +418,22 @@ def foam_f(o1):
 
 		# xy_proj[:, 0] = np.linspace(0, x_displ, num=num_p)
 		# xy_proj[:, 1] = v_p * np.sin(theta_p) * 2 * t_lin_p - 0.5 * G * t_lin_p ** 2
-		t_lin_p = np.linspace(0, 3, num_p)  # the more this is increased, the more fall
+		# t_lin_p = np.linspace(0, 0.0001, num_p)  # the more this is increased, the more fall
 
 		if h < 1.7 and h >= 0.001:
 			xy_proj[:, 0] = np.linspace(0, 500, num=num_p)
-			xy_proj[:, 1] = 15 * t_lin_p
+			# xy_proj[:, 1] = 15 * t_lin_p
 		elif h > 1.7:
-			xy_proj[:, 0] = np.linspace(0, 800, num=num_p)
-			xy_proj[:, 1] = 8 * t_lin_p - t_lin_p ** 2  # first one: more=more v up, i.e. will fall less
+			xy_proj[:, 0] = np.linspace(0, 800, num=num_p)  # 1000
+			# xy_proj[:, 1] = 4 * t_lin_p - t_lin_p ** 2  # first one: more=more v up, i.e. will fall less
+			if y_min_ind - y_max_ind > 20:
+				y_up_dist = y_peak_ind1 - y_min
+				if y_up_dist > 50:
+					xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_up_dist, num=len(xy_proj[y_min_ind:, 1]))
+					aa = 5
 		else:
 			xy_proj[:, 0] = np.linspace(0, 200, num=num_p)
-			xy_proj[:, 1] = 30 * t_lin_p
+			# xy_proj[:, 1] = 30 * t_lin_p
 
 		# xy_b[:, 0] = v_b * np.cos(theta_b) * t_lin_b
 		# xy_b[:, 1] = theta_b_flip_y * v_b * np.sin(theta_b) * 2 * t_lin_b - 0.5 * G * t_lin_b ** 2
@@ -447,7 +455,7 @@ def foam_f(o1):
 		'''OBBBBBBSSSS REMEMBER!!!! YOUR SHIFTING IT!!!! NOT SETTING'''
 		xy_t0[peak_ind0:peak_ind1, :] += xy_proj
 
-		adf = 5
+		'''Post'''
 
 		# start_xy_b = xy_t0[peak_ind0 + x_max_ind - 1, :]
 		# xy_b += start_xy_b

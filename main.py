@@ -20,7 +20,7 @@ from src import gen_objects
 from src.ani_helpers import *
 import P as P
 
-WRITE = 21
+WRITE = 0
 FPS = 40
 
 Writer = animation.writers['ffmpeg']
@@ -91,7 +91,7 @@ def animate(i):
                 elif drawBool == 1:  # continue drawing
                     set_O1(o1, ax_b, axs0)
                 elif drawBool == 2:  # remove
-                    prints += "  removing o1"
+                    # prints += "  removing o1"
                     decrement_all_index_axs0(index_removed, O0)
 
     print(prints)
