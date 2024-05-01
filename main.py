@@ -1,8 +1,10 @@
 """
 Matplotlib animation of projectiles, waves and clouds
 -*zorder.
+-*Foam f twist after h (probably just shift)
 
--Foam f twist after h
+-rotate_around
+
 -remove foam from 2
 -Random b foam flying into air.
 -Make 2 more pronounced.
@@ -18,7 +20,7 @@ from src import gen_objects
 from src.ani_helpers import *
 import P as P
 
-WRITE = 0
+WRITE = 21
 FPS = 40
 
 Writer = animation.writers['ffmpeg']

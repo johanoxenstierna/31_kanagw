@@ -26,19 +26,22 @@ class Waves_info:
         _s.zorder = None
 
         _s.o1_init_frames = [1]  # ALWAYS
+
         '''
         left_z is the SHEAR. So points are shifted more to right the closer to screen they are.
         Perhaps only used to reduce number of points. 
         This means that direction vector d needs to be tuned TOGETHER with it. 
         This shear can probably be removed if the image from which point pngs are taken is sheared instead. 
+        
         '''
+
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
 
         _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         if P.COMPLEXITY == 1:
-            _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+            _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
@@ -46,12 +49,12 @@ class Waves_info:
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[2, 4])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = min_max_normalization(stns_z0, y_range=[2, 3])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
 
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=10, b=10, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 4])
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 3])
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         peak = scipy.signal.find_peaks(stns_x0)[0][-1]
         stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-10, num=P.NUM_X - peak))
@@ -83,6 +86,9 @@ class Waves_info:
         '''
         _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
         # _s.h_mult = np.geomspace(1, 0.1, num=P.NUM_Z)
+        _s.H = np.copy(_s.stns_zx0)  # fall height for f
+        _s.H[:, int(P.NUM_X / 2):] = 0
+        _s.stns_zx0[:, int(P.NUM_X / 2):] /= 1.2
 
         '''
         OBS MAKING H SMALL IS ALSO SLOWING X MOVEMENT
