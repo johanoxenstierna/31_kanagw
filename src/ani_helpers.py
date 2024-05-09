@@ -50,11 +50,14 @@ def set_O1(o, ax_b, axs0):
 
 	'''TODO: object might need to be rotated around center instead of corner
 	CHECK rotate_around, rotate TAKES ARGS'''
+
 	M = mtransforms.Affine2D(). \
+		rotate_around(o.centroid[1], o.centroid[0], o.rotation[o.clock]). \
 		scale(o.scale[o.clock]). \
-		rotate(o.rotation[o.clock]). \
 		translate(o.xy[o.clock][0], o.xy[o.clock][1]) + ax_b.transData
 
+
+	# rotate(o.rotation[o.clock]). \
 	o.ax0.set_alpha(o.alphas[o.clock])
 	# o.ax0.set_zorder(deepcopy(int(o.zorder)))
 	# o.ax0.set_zorder(1000)

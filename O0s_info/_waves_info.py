@@ -41,20 +41,19 @@ class Waves_info:
         _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         if P.COMPLEXITY == 1:
-            _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
-
+            _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
         _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
         _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
         stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[2, 3])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
+        stns_z0 = min_max_normalization(stns_z0, y_range=[3, 4])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
         peak = scipy.signal.find_peaks(stns_z0)[0][-1]
         # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
 
         stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=10, b=10, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 3])
+        stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 3])  # MAINLY TO PREVENT LEFT FROM BREAKING
         # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
         peak = scipy.signal.find_peaks(stns_x0)[0][-1]
         stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-10, num=P.NUM_X - peak))
@@ -89,7 +88,7 @@ class Waves_info:
         _s.H = np.copy(_s.stns_zx0)  # fall height for f
         _s.H[:, int(P.NUM_X / 2):] = 0
         _s.stns_zx0[:, int(P.NUM_X / 2):] /= 1.2
-
+        asdf = 4
         '''
         OBS MAKING H SMALL IS ALSO SLOWING X MOVEMENT
         UPDATE: BASING H_MULT ON STNS DOESNT MAKE SENSE SINCE F USE STNS ANYWAY

@@ -1,6 +1,8 @@
 
 
 import os
+import random
+
 from scipy.stats._multivariate import multivariate_normal
 import matplotlib.pyplot as plt
 from src.trig_functions import _multivariate_normal
@@ -94,32 +96,78 @@ def get_kanagawa_fractals():
 
     PATH_IN = './pictures/waves/R/'
     _, _, all_file_names = os.walk(PATH_IN).__next__()
+    NUM_REPEATS_P_PIC = 25
+
+    d = np.zeros(shape=(P.NUM_Z, P.NUM_X))
+    indices = list(np.ndindex(d.shape))
+    np.random.shuffle(indices) # total random
 
     R_ = {}
     R_inds_used = []
 
-    ttt = imread(PATH_IN + '400_200' + '.png')
-    ttt = np.flipud(ttt)
-    R_['1_3'] = np.copy(ttt)
-    R_['1_10'] = np.copy(ttt)
-    R_['2_4'] = np.copy(ttt)
-    R_['2_14'] = np.copy(ttt)
-    R_['5_5'] = np.copy(ttt)
-    R_['5_12'] = np.copy(ttt)
+    for file_name in all_file_names:
 
-    R_inds_used.append((1, 3))  # z, x
-    R_inds_used.append((1, 10))  # z, x
-    R_inds_used.append((2, 4))  # z, x
-    R_inds_used.append((2, 14))  # z, x
-    R_inds_used.append((5, 5))  # z, x
-    R_inds_used.append((5, 12))  # z, x
+        ttt = imread(PATH_IN + file_name)
+        ttt = np.flipud(ttt)
+        possible_cells = convert_pixels_to_possible_cells(file_name.split('.')[0])
+        random.shuffle(possible_cells)
 
+        for _ in range(NUM_REPEATS_P_PIC):
+
+            ind_zx = possible_cells.pop()
+            ind_zx_str = str(ind_zx[0]) + '_' + str(ind_zx[1])
+
+            if ind_zx not in R_inds_used:
+                R_inds_used.append(ind_zx)
+                R_[ind_zx_str] = np.copy(ttt)
+
+
+    # R_['1_3'] = np.copy(ttt)  # zx
+    # R_['1_10'] = np.copy(ttt)
+    # R_['2_4'] = np.copy(ttt)
+    # R_['2_14'] = np.copy(ttt)
+    # R_['5_5'] = np.copy(ttt)
+    # R_['15_20'] = np.copy(ttt)
+    # R_['15_40'] = np.copy(ttt)
+    # R_['20_5'] = np.copy(ttt)
+    # R_['20_50'] = np.copy(ttt)
+    # R_['25_10'] = np.copy(ttt)
+
+    # R_inds_used.append((1, 3))  # z, x
+    # R_inds_used.append((1, 10))  # z, x
+    # R_inds_used.append((2, 4))  # z, x
+    # R_inds_used.append((2, 14))  # z, x
+    # R_inds_used.append((5, 5))  # z, x
+    # R_inds_used.append((15, 20))  # z, x
+    # R_inds_used.append((15, 40))  # z, x
+    # R_inds_used.append((20, 5))  # z, x
+    # R_inds_used.append((20, 50))  # z, x
+    # R_inds_used.append((25, 10))  # z, x
 
     return R_, R_inds_used
 
-def convert_pixels_to_grid():
-    pass
+def convert_pixels_to_possible_cells(pixels):
 
+    cells = []
 
+    '''Get ratio'''
+    pxsl_x = int(pixels.split('_')[0])
+    pxsl_z = int(pixels.split('_')[1])
 
+    ratio_x = pxsl_x / 1280
+    ratio_z = (720 - pxsl_z) / 720  # FROM BOTTOM
+    
+    ratio_x_diff = 0.3
+    ratio_z_diff = 0.3
 
+    cell_x_min = int((ratio_x - ratio_x_diff) * P.NUM_X)
+    cell_x_max = int((ratio_x + ratio_x_diff) * P.NUM_X)
+
+    cell_z_min = int((ratio_z - ratio_z_diff) * P.NUM_Z)
+    cell_z_max = int((ratio_z + ratio_z_diff) * P.NUM_Z)
+
+    for i in range(cell_x_min, cell_x_max):
+        for j in range(cell_z_min, cell_z_max):
+            cells.append((i, j))
+
+    return cells

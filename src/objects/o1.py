@@ -18,11 +18,12 @@ class O1C(AbstractObject, AbstractSSS):
         _s.x_key = int(_s.id_s[0])
         _s.z_key = int(_s.id_s[1])  # biggest z_key is at the top
 
-        z_key_g = 20000 - _s.z_key * 100
+        z_key_g = 20000 - _s.z_key * 100  # the bigger the z_key, the smaller the zorder
         _s.zorder = z_key_g + _s.x_key
 
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
+        _s.centroid = [int(pic.shape[0] / 2), int(pic.shape[1] / 2)]
         # _s.type = type
         _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
         # ONLY OBJECTS THAT ARE MUTABLE ARE TO BE COPIED
@@ -117,8 +118,8 @@ class O1C(AbstractObject, AbstractSSS):
 
         '''indicies where y-tangent is at max'''
 
-        _s.xy_t, _s.alphas, _s.rotation = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
-        _s.zorder += 2000  # OBS needs tuning
+        _s.xy_t, _s.alphas, _s.rotation, _s.scale = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
+        _s.zorder += 5000  # OBS needs tuning
 
         _s.xy = np.copy(_s.xy_t)
         _s.xy *= _s.o0.gi.distance_mult[_s.z_key]
