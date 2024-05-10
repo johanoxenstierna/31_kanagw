@@ -6,7 +6,7 @@ import numpy as np
 import P
 
 # from sh_info import shInfoAbstract, _0_info
-from O0s_info import _projectiles_info, _waves_info, _clouds_info
+from O0s_info import _waves_info
 
 def _genesis():
 

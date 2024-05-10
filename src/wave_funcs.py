@@ -63,7 +63,7 @@ def gerstner_waves(o1, o0):
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
 	# SS = [0, 1, 2]
-	# SS = [0]
+	SS = [0]
 	# SS = [1]
 	# SS = [2]
 	SS = [0, 2]
@@ -85,9 +85,9 @@ def gerstner_waves(o1, o0):
 
 		if w == 0:  #
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([0.4, -0.9])  # OBS this is multiplied with x and z, hence may lead to large y!
+			d = np.array([0.1, -0.9])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.1  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			c = 0.2  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
 				d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
@@ -96,7 +96,7 @@ def gerstner_waves(o1, o0):
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
 			# stn_particle = 0.01
-			stn_particle = o0.gi.stns_zx0[o1.z_key, o1.x_key]
+			stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
 			stn = stn_particle / k
 		# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
@@ -277,7 +277,8 @@ def foam_f(o1):
 	But v and h found using xy_t0
 	'''
 
-	peak_inds = scipy.signal.find_peaks(xy_t[:, 1], distance=MIN_DIST_FRAMES_BET_WAVES)[0]  # OBS 20 needs tuning!!!
+	# peak_inds = scipy.signal.find_peaks(xy_t[:, 1], distance=MIN_DIST_FRAMES_BET_WAVES)[0]  # OBS 20 needs tuning!!!
+	peak_inds = scipy.signal.find_peaks(xy_t[:, 1], distance=MIN_DIST_FRAMES_BET_WAVES, height=20)[0]  # OBS 20 needs tuning!!!
 	peak_inds -= EARLINESS_SHIFT  # neg mean that they will start before the actual peak
 	neg_inds = np.where(peak_inds < 0)[0]
 	if len(neg_inds) > 0:  # THIS IS NEEDED DUE TO peak_inds -= 10
@@ -293,8 +294,8 @@ def foam_f(o1):
 	'''
 
 	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
-	h_mult = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
-	stn = o1.o0.gi.stns_zx0[o1.z_key, o1.x_key]
+	h_mult = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
+	stn = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
 	h = o1.o0.gi.H[o1.z_key, o1.x_key]
 	x_displ = 500
 
@@ -391,15 +392,15 @@ def foam_f(o1):
 			if y_min_ind - y_max_ind > 20:  # y_min occurs after y_max
 				y_up_dist = y_peak1 - y_min  # so its just parsed
 				if y_up_dist > 50:
-					y_up_dist += random.randint(-100, 20)
+					y_up_dist += random.randint(200, 300)  # its flipped below
 					'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
-					xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-0.5 * y_up_dist, num=len(xy_proj[y_min_ind:, 1]))
+					xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_up_dist, num=len(xy_proj[y_min_ind:, 1]))
 					aa = 5
-
-			if x_min_ind - x_max_ind > 20:  # x_min occurs after x_max
+			aa = x_min_ind - x_max_ind
+			if x_min_ind - x_max_ind > 10:  # x_min occurs after x_max
 				x_left_dist = x_max - x_min  # just parsed
 				if x_left_dist > 50:
-					x_left_dist += random.randint(0, 220)  # -220, 120
+					x_left_dist += random.randint(300, 400)  # -220, 120
 					xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_left_dist, num=len(xy_proj[x_max_ind:, 1]))
 					aa = 5
 

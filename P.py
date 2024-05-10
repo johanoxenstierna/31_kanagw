@@ -13,7 +13,7 @@ FRAMES_TOT = FRAMES_STOP - FRAMES_START
 
 '''Note Z is moving away from screen (numpy convention). 
 Hence, increasing z means increasing rows in k0. BUT y is going up'''
-NUM_X = 80  # MUST CORRESPOND SOMEHOW WITH O1 PICTURES
-NUM_Z = 50  # 30  # 20 HAS IMPACT ON WAVE  80/40 takes 100min  100/50 takes 166min
+NUM_X = 60  # MUST CORRESPOND SOMEHOW WITH O1 PICTURES
+NUM_Z = 30  # 30  # 20 HAS IMPACT ON WAVE  80/40 takes 100min  100/50 takes 166min
 
 O0_TO_SHOW = ['waves']

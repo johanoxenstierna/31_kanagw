@@ -7,6 +7,7 @@ import copy
 from scipy.stats import beta, gamma
 import scipy
 from src.trig_functions import min_max_normalization
+from O0s_info._waves_helper import *
 
 import P as P
 import random
@@ -44,50 +45,20 @@ class Waves_info:
             _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
-        _s.stns_zx0 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
-        _s.stns_zx1 = np.zeros(shape=(P.NUM_Z, P.NUM_X))
 
-        stns_z0 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=5, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z0 = min_max_normalization(stns_z0, y_range=[3, 4])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
-        peak = scipy.signal.find_peaks(stns_z0)[0][-1]
-        # stns_z0[peak:] *= np.exp(np.linspace(start=0, stop=-2, num=P.NUM_Z - peak))
+        _s.stns_ZX = gen_stns()
 
-        stns_x0 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=10, b=10, loc=0)
-        stns_x0 = min_max_normalization(stns_x0, y_range=[0.1, 3])  # MAINLY TO PREVENT LEFT FROM BREAKING
-        # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
-        peak = scipy.signal.find_peaks(stns_x0)[0][-1]
-        stns_x0[peak:] *= np.exp(np.linspace(start=0, stop=-10, num=P.NUM_X - peak))
 
-        stns_z1 = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=5, b=2, loc=0)  # a>b BIGGEST FURTHEST AWAY
-        stns_z1 = min_max_normalization(stns_z1, y_range=[0.2, 1.5])  # OBS BIGGEST IND IS FURTEST FROM SCREEN
-        peak = scipy.signal.find_peaks(stns_z1)[0][0]
-        stns_z1[peak:] *= np.exp(np.linspace(start=0, stop=-5, num=P.NUM_Z - peak))
-
-        stns_x1 = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=4, b=5, loc=0)
-        stns_x1 = min_max_normalization(stns_x1, y_range=[0.2, 1.5])
-        peak = scipy.signal.find_peaks(stns_x1)[0][0]
-        stns_x1[peak:] = np.exp(np.linspace(start=0, stop=-5, num=P.NUM_X - peak))
-
-        for i in range(P.NUM_Z):
-            for j in range(P.NUM_X):
-                stn_z = stns_z0[i]
-                stn_x = stns_x0[j]
-                stn_zx = 0.5 * stn_z + 0.5 * stn_x
-                _s.stns_zx0[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN  (i=0 => BOTTOM)
-
-                stn_z = stns_z1[i]
-                stn_x = stns_x1[j]
-                stn_zx = 0.2 * stn_z + 0.8 * stn_x
-                _s.stns_zx1[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN (i=0 => BOTTOM)
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  
         TODO: stns_zx0 should be tilted
         '''
-        _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
+        _s.distance_mult = np.linspace(1, 1.00001, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
         # _s.h_mult = np.geomspace(1, 0.1, num=P.NUM_Z)
-        _s.H = np.copy(_s.stns_zx0)  # fall height for f
+        _s.H = np.copy(_s.stns_ZX[0, :, :])  # fall height for f
         _s.H[:, int(P.NUM_X / 2):] = 0
-        _s.stns_zx0[:, int(P.NUM_X / 2):] /= 1.2
+        # _s.stns_zx0[:, int(P.NUM_X / 2):] /= 1.2
+        # _s.stns_ZX[0, :, int(P.NUM_X / 2):] /= 1.2
         asdf = 4
         '''
         OBS MAKING H SMALL IS ALSO SLOWING X MOVEMENT
