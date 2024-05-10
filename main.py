@@ -22,7 +22,7 @@ from src import gen_objects
 from src.ani_helpers import *
 import P as P
 
-WRITE = 25
+WRITE = 0
 FPS = 40
 
 Writer = animation.writers['ffmpeg']

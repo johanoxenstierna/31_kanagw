@@ -39,10 +39,10 @@ class Waves_info:
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
 
-        _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         if P.COMPLEXITY == 1:
-            _s.o1_down_z = np.linspace(-50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+            _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
 
@@ -53,10 +53,12 @@ class Waves_info:
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  
         TODO: stns_zx0 should be tilted
         '''
-        _s.distance_mult = np.linspace(1, 1.00001, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
+        _s.distance_mult = np.linspace(1, 0.8, num=P.NUM_Z)  # DECREASES WITH ROWS  # NO HORIZON WITHOUT THIS
         # _s.h_mult = np.geomspace(1, 0.1, num=P.NUM_Z)
         _s.H = np.copy(_s.stns_ZX[0, :, :])  # fall height for f
-        _s.H[:, int(P.NUM_X / 2):] = 0
+        _s.H[np.where(_s.H < 2.0)] = 0.0
+        ff = 5
+        # _s.H[:, int(P.NUM_X / 2):] = 0
         # _s.stns_zx0[:, int(P.NUM_X / 2):] /= 1.2
         # _s.stns_ZX[0, :, int(P.NUM_X / 2):] /= 1.2
         asdf = 4

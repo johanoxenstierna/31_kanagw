@@ -11,9 +11,14 @@ FRAMES_STOP = 2000
 
 FRAMES_TOT = FRAMES_STOP - FRAMES_START
 
+A_F = 1
+A_K = 1
+if COMPLEXITY == 1:
+    A_K = 1
+
 '''Note Z is moving away from screen (numpy convention). 
 Hence, increasing z means increasing rows in k0. BUT y is going up'''
-NUM_X = 60  # MUST CORRESPOND SOMEHOW WITH O1 PICTURES
-NUM_Z = 30  # 30  # 20 HAS IMPACT ON WAVE  80/40 takes 100min  100/50 takes 166min
+NUM_X = 20  # MUST CORRESPOND SOMEHOW WITH O1 PICTURES
+NUM_Z = 10  # 30  # 20 HAS IMPACT ON WAVE  80/40 takes 100min  100/50 takes 166min
 
 O0_TO_SHOW = ['waves']
