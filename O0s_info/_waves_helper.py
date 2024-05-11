@@ -46,57 +46,84 @@ def gen_stns():
     # A = np.linspace(15, 10, num=P.NUM_X)  # Z decides how thick break is
     # B = np.linspace(10, 15, num=P.NUM_X)
 
-    LOW_BOUND_y = 1
+    BOUND_LO_y = 2
+    BOUND_UP_y = 4
+    BOUND_MI_y = 3
 
-    stns_ZX = np.full(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), fill_value=LOW_BOUND_y, dtype=np.float16)
+    # stns_ZX = np.full(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), fill_value=LOW_BOUND_y, dtype=np.float16)
+    stns_ZX = np.zeros(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), dtype=np.float16)
+    stns_Z = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
+    stns_X = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
+    H_Z = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
+    H_X = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
 
-    '''STN X: One stn array per z: wave breaks in middle of x axis '''
-    num_stn = P.NUM_Z
-
-    A = np.linspace(15, 10, num=P.NUM_Z)  # X decides how thick break is
-    B = np.linspace(10, 15, num=P.NUM_Z)
-
-    for i in range(num_stn):  # OBS 0 is closest to screen!
-
-        stns_x = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=A[i], b=B[i], loc=0)
-        stns_x = min_max_normalization(stns_x, y_range=[LOW_BOUND_y, 3])  # MAINLY TO PREVENT LEFT FROM BREAKING
-        peak = scipy.signal.find_peaks(stns_x)[0][-1]
-        stns_x[peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))
-
-        stns_ZX[0, i, :] += 0.85 * stns_x
+    SPLIT_ZX = [0.6, 0.4]  # NOT USED BY H
 
     '''STN Z: One stn array per x: wave breaks in middle of x axis '''
     num_stn = P.NUM_X
-    A = np.linspace(15, 10, num=P.NUM_X)  # X decides how thick break is
-    B = np.linspace(10, 15, num=P.NUM_X)
+    A = np.linspace(2, 5, num=P.NUM_X)  # X decides how thick break is
+    B = np.linspace(5, 3, num=P.NUM_X)
 
     for i in range(num_stn):  # OBS 0 is closest to screen!
 
         stns_z = beta.pdf(x=np.linspace(0, 1, P.NUM_Z), a=A[i], b=B[i], loc=0)
-        stns_z = min_max_normalization(stns_z, y_range=[LOW_BOUND_y, 3])  # MAINLY TO PREVENT LEFT FROM BREAKING
-        # stns_x0 = min_max_normalization(w0 + w1 + w2, y_range=[0.5, 1.8])
+        stns_z = min_max_normalization(stns_z, y_range=[BOUND_LO_y, BOUND_UP_y])  # MAINLY TO PREVENT LEFT FROM BREAKING
         peak = scipy.signal.find_peaks(stns_z)[0][-1]
         # aa = np.exp(np.linspace(start=0, stop=-2, num=P.NUM_X - peak))
         # stns_z[peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_Z - peak))
         stns_z[:peak] *= np.exp(np.linspace(start=-1.5, stop=0, num=peak))
+        h_z = np.copy(stns_z)
+        h_z[:peak] = 0
 
-        stns_ZX[0, :, i] += 0.15 * stns_z
+        stns_Z[:, i] = stns_z
+        H_Z[:, i] = h_z
 
-    # for i in range(P.FRAMES_TOT):
-    # saa = np.flipud(stns_ZX[0, :, :])
-    # A55 = np.rot90(stns_ZX[0, :, :])
-    # ggg = np.fliplr(A55)
-    aa = 5
-    # for i in range(P.NUM_Z):
-    #     for j in range(P.NUM_X):
-    #         stn_z = stns_z[i]
-    #         stn_x = stns_x[j]
-    #         stn_zx = 0.5 * stn_z + 0.5 * stn_x
-    #         stns_zx[i, j] = stn_zx  # OBS BIGGEST ROW IS FURTEST FROM SCREEN  (i=0 => BOTTOM)
+    '''STN X: One stn array per z: wave breaks in middle of x axis '''
+    num_stn = P.NUM_Z
+
+    A = np.linspace(2, 5, num=P.NUM_Z)  # X decides how thick break is
+    B = np.linspace(5, 2, num=P.NUM_Z)
+
+    for i in range(num_stn):  # OBS 0 is closest to screen!
+
+        stns_x = beta.pdf(x=np.linspace(0, 1, P.NUM_X), a=A[i], b=B[i], loc=0)
+        stns_x = min_max_normalization(stns_x, y_range=[BOUND_LO_y, BOUND_UP_y])  # MAINLY TO PREVENT LEFT FROM BREAKING
+        peak = scipy.signal.find_peaks(stns_x)[0][-1]
+        stns_x[peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))
+        h_x = np.copy(stns_x)
+        h_x[peak:] = 0
+
+        stns_X[i, :] = stns_x
+        H_X[i, :] = h_x
 
     np.save(PATH_OUT, stns_ZX)
 
-    return stns_ZX
+    stns_ZX[0, :, :] = SPLIT_ZX[0] * stns_Z + SPLIT_ZX[1] * stns_X
+
+    # H = np.copy(stns_ZX[0, :, :])  # fall height for f ONLY f!
+    H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
+
+    inds_buildup = np.where((BOUND_LO_y <= H_Z[:, :]) & (H_Z[:, :] <= BOUND_MI_y ))
+    inds_break = np.where(BOUND_MI_y < H_Z[:, :])
+    inds_post = np.where(H_Z[:, :] < BOUND_LO_y)
+
+    H[inds_buildup] += int(100 * SPLIT_ZX[0])
+    H[inds_break] += int(1000 * SPLIT_ZX[0])
+    H[inds_post] += 0
+
+    inds_buildup = np.where((BOUND_LO_y <= H_X[:, :]) & (H_X[:, :] <= BOUND_MI_y))
+    inds_break = np.where(BOUND_MI_y < H_X[:, :])
+    inds_post = np.where(H_X[:, :] < BOUND_LO_y)
+
+    H[inds_buildup] += int(100 * SPLIT_ZX[1])
+    H[inds_break] += int(1000 * SPLIT_ZX[1])
+    H[inds_post] += 0
+
+    H[np.where((H > 4) & (H < 500))] = 1
+    H[np.where(H >= 500)] = 2
+
+
+    return stns_ZX, H
 
 
 
