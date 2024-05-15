@@ -2,11 +2,85 @@
 import numpy as np
 import P
 import scipy
-from scipy.stats import beta
-from src.trig_functions import min_max_normalization
+from scipy.stats import beta, multivariate_normal
+from src.trig_functions import min_max_normalization, min_max_normalize_array
 
 
 def gen_stns():
+    """New: Use mvn"""
+    PATH_OUT = './O0s_info/stns_ZX.npy'
+
+    '''cov: more second: more x spread. '''
+    rv = multivariate_normal(mean=[P.NUM_Z / 2, P.NUM_X / 2], cov=[[P.NUM_Z / 4, P.NUM_Z],
+                                                                   [P.NUM_Z, P.NUM_Z * 8]])  # more=more visible
+    BOUND_LO_y = 2
+    BOUND_UP_y = 4
+    BOUND_MI_y = 3
+
+    x, y = np.mgrid[0:P.NUM_Z:1, 0:P.NUM_X:1]
+    pos = np.dstack((x, y))
+    stns_ZX = rv.pdf(pos)
+    stns_ZX = stns_ZX / np.max(stns_ZX)
+    H_Z = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
+    H_X = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
+
+    '''Normalize'''
+    stns_ZX = min_max_normalize_array(stns_ZX, y_range=[BOUND_LO_y, BOUND_UP_y])
+
+    '''STN Z: One stn array per x'''
+    # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # to make sure there is a peak
+    for i in range(P.NUM_X):  # OBS 0 is closest to screen!
+        stns_ZX[:, i] += 0.0001  # to make sure there is a peak
+        peak = np.argmax(stns_ZX[:, i])
+        stns_ZX[:peak, i] *= np.exp(np.linspace(start=-0.5, stop=0, num=peak))
+
+        h_z = np.copy(stns_ZX[:, i])
+        h_z[:peak] = 0
+        H_Z[:, i] = h_z
+
+    '''STN X: One stn array per z'''
+    # stns_ZX[:, int(P.NUM_X / 2)] += 0.0001  # to make sure there is a peak
+    for i in range(P.NUM_Z):  # OBS 0 is closest to screen!
+        stns_ZX[i, :] += 0.0001  # to make sure there is a peak
+        peak = np.argmax(stns_ZX[i, :])
+        stns_ZX[i, peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))
+
+        h_x = np.copy(stns_ZX[i, :])
+        h_x[peak:] = 0
+        H_X[i, :] = h_x
+
+    np.save(PATH_OUT, stns_ZX)
+
+    SPLIT_ZX = [0.8, 0.2]
+
+    H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
+
+    inds_buildup = np.where((BOUND_LO_y <= H_Z[:, :]) & (H_Z[:, :] <= BOUND_MI_y))
+    inds_break = np.where(BOUND_MI_y < H_Z[:, :])
+    inds_post = np.where(H_Z[:, :] < BOUND_LO_y)
+
+    H[inds_buildup] += int(100 * SPLIT_ZX[0])
+    H[inds_break] += int(1000 * SPLIT_ZX[0])
+    H[inds_post] += 0
+
+    inds_buildup = np.where((BOUND_LO_y <= H_X[:, :]) & (H_X[:, :] <= BOUND_MI_y))
+    inds_break = np.where(BOUND_MI_y < H_X[:, :])
+    inds_post = np.where(H_X[:, :] < BOUND_LO_y)
+
+    H[inds_buildup] += int(100 * SPLIT_ZX[1])
+    H[inds_break] += int(1000 * SPLIT_ZX[1])
+    H[inds_post] += 0
+
+    H[np.where((H > 4) & (H < 500))] = 1
+    H[np.where(H >= 500)] = 2
+
+    stns_TZX = np.zeros(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), dtype=np.float16)
+    stns_TZX[0, :, :] = stns_ZX
+
+    return stns_TZX, H
+
+
+def gen_stns_old():
     """
     Cant shift it cuz new values need to be generated each z
     """
@@ -96,9 +170,9 @@ def gen_stns():
         stns_X[i, :] = stns_x
         H_X[i, :] = h_x
 
-    np.save(PATH_OUT, stns_ZX)
 
     stns_ZX[0, :, :] = SPLIT_ZX[0] * stns_Z + SPLIT_ZX[1] * stns_X
+    np.save(PATH_OUT, stns_ZX)
 
     # H = np.copy(stns_ZX[0, :, :])  # fall height for f ONLY f!
     H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
@@ -121,7 +195,6 @@ def gen_stns():
 
     H[np.where((H > 4) & (H < 500))] = 1
     H[np.where(H >= 500)] = 2
-
 
     return stns_ZX, H
 

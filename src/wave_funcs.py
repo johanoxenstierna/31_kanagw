@@ -390,7 +390,7 @@ def foam_f(o1):
 
 		# if h < 2 and h >= 0.001:  # build up
 		if h == 1:  # build up
-			xy_proj[:, 0] = np.linspace(0, 400, num=num_p)
+			xy_proj[:, 0] = np.linspace(0, 1, num=num_p)  # 400
 			xy_proj[:, 1] = np.linspace(0, 25, num=num_p)
 			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=12, loc=0)  # ONLY FIRST PART
 			if random.random() < 0.05:
@@ -399,7 +399,7 @@ def foam_f(o1):
 				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
 
 		elif h == 2:  # breaking
-			xy_proj[:, 0] = np.linspace(0, 400, num=num_p)  # 1000
+			xy_proj[:, 0] = np.linspace(0, 200, num=num_p)  # 1000
 			# xy_proj[:, 1] = 4 * t_lin_p - t_lin_p ** 2  # first one: more=more v up, i.e. will fall less
 			if y_min_ind - y_max_ind > 20:  # y_min occurs after y_max
 				y_up_dist = y_peak1 - y_min  # so its just parsed
@@ -407,13 +407,12 @@ def foam_f(o1):
 					y_up_dist += random.randint(300, 301)  # its flipped below
 					'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
 					xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_up_dist, num=len(xy_proj[y_min_ind:, 1]))
-					aa = 5
-			aa = x_min_ind - x_max_ind
+
 			if x_min_ind - x_max_ind > 10:  # x_min occurs after x_max
-				x_left_dist = x_max - x_min  # just parsed
-				if x_left_dist > 20:
-					x_left_dist += random.randint(200, 201)  # -220, 120
-					xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_left_dist, num=len(xy_proj[x_max_ind:, 1]))
+				x_right_dist = x_max - x_min  # just parsed
+				if x_right_dist > 20:
+					x_right_dist += random.randint(0, 100)  # -220, 120
+					xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
 					aa = 5
 
 			num_first = len(xy_proj[:y_min_ind, 0])
@@ -446,11 +445,9 @@ def foam_f(o1):
 		alphas[peak_ind0:peak_ind1] = alpha_mask_t
 
 		'''OBBBBBBSSSS REMEMBER!!!! YOUR SHIFTING IT!!!! NOT SETTING'''
-		xy_t0[peak_ind0:peak_ind1, :] += xy_proj
+		xy_t[peak_ind0:peak_ind1, :] += xy_proj
 
-
-
-	return xy_t0, alphas, rotation0, scale
+	return xy_t, alphas, rotation0, scale
 
 
 # foam_f old

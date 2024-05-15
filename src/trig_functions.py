@@ -57,6 +57,17 @@ def min_max_normalization(X, y_range):
 
 	return Y
 
+
+def min_max_normalize_array(X, y_range):
+	# # Normalize the values in the array to be between 0 and 1
+	# arr_min = arr.min()
+	# arr_max = arr.max()
+	# normalized_arr = (arr - arr_min) / (arr_max - arr_min)
+	# modified_arr = normalized_arr * (new_max - new_min) + new_min
+	X_m = X * (y_range[1] - y_range[0]) + y_range[0]
+
+	return X_m
+
 # def sigmoid(X):
 # 	return 1/(1 + np.exp(-X))
 

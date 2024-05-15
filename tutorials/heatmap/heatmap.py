@@ -13,7 +13,8 @@ from matplotlib.patches import Rectangle
 '''Cant share these unfortunately so replace with your own'''
 # heatmaps = np.load('./tutorials/heatmap/heatmaps.npy')
 heatmaps = np.load('./O0s_info/stns_ZX.npy')
-heatmap = np.flipud(heatmaps[0, :, :])
+# heatmap = np.flipud(heatmaps[0, :, :])
+heatmap = np.flipud(heatmaps[:, :])
 background_pic = imread('./tutorials/heatmap/background_pic.png')
 
 FRAMES_START = 0

@@ -2,10 +2,8 @@
 Matplotlib animation of projectiles, waves and clouds
 -*zorder.
 -*Foam f twist after h (probably just shift)
-
--increase c
-
--rotate_around
+-*increase c
+-*rotate_around
 
 -remove foam from 2
 -Random b foam flying into air.

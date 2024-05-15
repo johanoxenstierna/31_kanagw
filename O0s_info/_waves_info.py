@@ -46,6 +46,7 @@ class Waves_info:
 
         '''TODO: THESE SHOULD BE BETA DISTS'''
 
+        # _s.stns_ZX, _s.H = gen_stns_old()
         _s.stns_ZX, _s.H = gen_stns()
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  
