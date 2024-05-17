@@ -62,11 +62,11 @@ def gerstner_waves(o1, o0):
 	x = o1.gi['ld'][0]
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	# SS = [0, 1, 2]
-	SS = [0]
+	SS = [0, 1, 2]
+	# SS = [0]
 	# SS = [1]
 	# SS = [2]
-	SS = [0, 2]
+	# SS = [0, 2]
 	# if P.COMPLEXITY == 0:
 	# 	SS = [0, 3]
 	# elif P.COMPLEXITY == 1:
@@ -96,19 +96,20 @@ def gerstner_waves(o1, o0):
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
 			# stn_particle = 0.01
-			stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
-			stn = stn_particle / k
+
 		# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
-			d = np.array([0.4, -0.6])
+			# d = np.array([0.13, -0.87])
+			d = np.array([0.25, -0.75])
 			# d = np.array([0.9, -0.1])
 			# c = 0.1  # [-0.03, -0.015] ?????
-			c = 0.2  # [0.1, 0.02]
+			c = 0.1  # [0.1, 0.02]
 			if P.COMPLEXITY == 1:
 				c /= 5
-			lam = 1200  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
+			lam = 600  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
-			stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
+			# stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
+			# stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
 			stn = None  # cuz its also affected by time
 		# steepness_abs = 1
 		elif w == 2:
@@ -124,8 +125,17 @@ def gerstner_waves(o1, o0):
 
 		for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
 
+			if w == 0:
+				stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+				stn = stn_particle / k
 			if w == 1:
-				stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
+				stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+				# stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
+				stn = stn_particle / k
+			if w == 2:
+				stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+				stn = stn_particle / k
+
 			# stn = stn_particle / k
 
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
@@ -293,11 +303,11 @@ def foam_f(o1):
 	Conjecture: Have to pick EITHER tp OR tp0 below. 
 	'''
 
-	v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
-	h_mult = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
-	stn = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
-	h = o1.o0.gi.H[o1.z_key, o1.x_key]
-	x_displ = 500
+	# v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
+	# h_mult = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
+	# stn = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
+	h = o1.o0.gi.TH[0, o1.z_key, o1.x_key]
+	# x_displ = 500
 
 	for i in range(len(peak_inds) - 1):
 
@@ -430,12 +440,15 @@ def foam_f(o1):
 
 		else:  # post. Make more chaotic
 
-			if random.random() < 0.3:  # moves down
-				x_stop = random.randint(299, 300)
-				y_stop = random.randint(-20, -19)
-			else:  # moves up
-				x_stop = random.randint(200, 501)
-				y_stop = random.randint(50, 200)
+			# if random.random() < 0.1:  # moves down
+			# 	x_stop = random.randint(90, 200)
+			# 	y_stop = random.randint(-20, -19)
+			# else:  # moves up
+			# 	x_stop = random.randint(90, 200)
+			# 	y_stop = random.randint(-20, 200)
+
+			x_stop = random.randint(0, 200)
+			y_stop = random.randint(-50, 0)
 
 			xy_proj[:, 0] = np.linspace(0, x_stop, num=num_p)
 			xy_proj[:, 1] = np.linspace(0, y_stop, num=num_p)

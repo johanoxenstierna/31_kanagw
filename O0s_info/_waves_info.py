@@ -33,7 +33,6 @@ class Waves_info:
         Perhaps only used to reduce number of points. 
         This means that direction vector d needs to be tuned TOGETHER with it. 
         This shear can probably be removed if the image from which point pngs are taken is sheared instead. 
-        
         '''
 
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
@@ -44,10 +43,8 @@ class Waves_info:
         if P.COMPLEXITY == 1:
             _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
-        '''TODO: THESE SHOULD BE BETA DISTS'''
-
         # _s.stns_ZX, _s.H = gen_stns_old()
-        _s.stns_ZX, _s.H = gen_stns()
+        _s.stns_TZX, _s.TH = gen_stns()
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  
         TODO: stns_zx0 should be tilted

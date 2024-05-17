@@ -139,7 +139,7 @@ class GenObjects:
                             o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
                             o1r.gen_f(o1)
                             # o1r.gen_r(o1)
-                            o1r.scale = min_max_normalization(o1r.scale, y_range=[0.99, 1.3])
+                            o1r.scale = min_max_normalization(o1r.scale, y_range=[0.5, 1.3])
                             # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
                             o1r.rotation *= 1.4
                             # o1r.gen_r(o1f)
