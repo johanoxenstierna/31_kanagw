@@ -28,8 +28,10 @@ def gen_stns():
 
     C = 4
 
-    # FRAMES = P.FRAMES_TOT
     FRAMES = 500
+    if P.COMPLEXITY == 1:
+        FRAMES = P.FRAMES_TOT
+
 
     '''OBS this is not aligned in any sensical way'''
     rotation_angle = np.linspace(0.95 * np.pi, 1.2 * np.pi, FRAMES)
@@ -38,11 +40,12 @@ def gen_stns():
 
     mean = [P.NUM_Z / 2, P.NUM_X / 2]  # TODO: move it.  -
     C = np.linspace(30, 29, num=FRAMES)  # less=thinner break
+    cov_b_mult = np.linspace(2, 20, num=FRAMES)
 
     for ii in range(FRAMES):
 
         angle = rotation_angle[ii]
-        cov_b = C[ii] * 20
+        cov_b = C[ii] * cov_b_mult[ii]
         cov = np.array([[cov_b, 0.99 * cov_b],
                         [0.99 * cov_b, cov_b]])  # more const: less spread
         rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],

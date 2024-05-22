@@ -67,10 +67,6 @@ def gerstner_waves(o1, o0):
 	# SS = [1]
 	# SS = [2]
 	# SS = [0, 1]
-	# if P.COMPLEXITY == 0:
-	# 	SS = [0, 3]
-	# elif P.COMPLEXITY == 1:
-	# 	SS = [0, 3]
 
 	for w in SS:  # NUM WAVES
 
@@ -85,8 +81,8 @@ def gerstner_waves(o1, o0):
 
 		if w == 0:  #
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-			d = np.array([0.13, -0.87])  # OBS this is multiplied with x and z, hence may lead to large y!
-			d = np.array([0.25,  -0.75])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.3, -0.7])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.25,  -0.75])  # OBS this is multiplied with x and z, hence may lead to large y!
 			c = 0.15  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
@@ -100,13 +96,13 @@ def gerstner_waves(o1, o0):
 		# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
 			d = np.array([0.25, -0.75])
-			d = np.array([0.3, -0.7])
+			# d = np.array([0.4, -0.6])
 			# d = np.array([0.9, -0.1])
 			# c = 0.1  # [-0.03, -0.015] ?????
 			c = 0.15  # [0.1, 0.02]
 			if P.COMPLEXITY == 1:
 				c /= 5
-			lam = 900  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
+			lam = 600  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			# stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
 			# stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
@@ -141,11 +137,11 @@ def gerstner_waves(o1, o0):
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
 
 			if w != 2:  # SMALL ONES MOVE LEFT
-				xy[i, 0] += (stn * np.cos(y)) / 3  # this one needs fixing due to foam
+				xy[i, 0] += (stn * np.cos(y)) / 2.5  # this one needs fixing due to foam
 			elif w == 2:  # small ones
-				xy[i, 0] -= (stn * np.cos(y)) / 3
+				xy[i, 0] -= (stn * np.cos(y)) / 2.5
 
-			xy[i, 1] += (stn * np.sin(y)) / 3
+			xy[i, 1] += (stn * np.sin(y)) / 2.5
 
 			if w == 0:
 				xy0[i, 0] = stn * np.cos(y)
@@ -409,9 +405,10 @@ def foam_f(o1):
 			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 10 and \
 					y_fall_dist > 0 and x_right_dist > 0:  # y_min occurs after y_max and x_min occurs after x_max
 				x_right_dist *= 1.5
-				xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
+				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
+				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=12, loc=0)  # ONLY FIRST PART
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=8, loc=0)  # ONLY FIRST PART
 			if random.random() < 0.05:  # flying
 				xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
 				xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
@@ -430,19 +427,22 @@ def foam_f(o1):
 
 				# if x_right_dist > 0:
 				# x_right_dist += random.randint(0, 100)  # -220, 120
-				x_right_dist *= 1.1
+				x_right_dist *= 1.5
 				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
 				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
-				num_first = len(xy_proj[:y_min_ind, 0])
-				alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
-				alpha_mask_0 = min_max_normalize_array(alpha_mask_0, y_range=[0.0, alpha_UB])
+				# num_first = len(xy_proj[:y_min_ind, 0])
+				# alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
+				# alpha_mask_0 = min_max_normalize_array(alpha_mask_0, y_range=[0.0, alpha_UB])
+				#
+				# num_second = len(xy_proj[y_min_ind:, 0])
+				# alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
+				# alpha_mask_1 = min_max_normalize_array(alpha_mask_1, y_range=[0.0, alpha_UB])
 
-				num_second = len(xy_proj[y_min_ind:, 0])
-				alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
-				alpha_mask_1 = min_max_normalize_array(alpha_mask_1, y_range=[0.0, alpha_UB])
+				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=2, loc=0)  # HAVE TO HAVE A PLACEHOLDER
+				alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0, alpha_UB])
 
-				alpha_mask_t[0:num_first] = alpha_mask_0
+				# alpha_mask_t[0:num_first] = alpha_mask_0
 				# alpha_mask_t[num_first:] = alpha_mask_1
 
 				aa = 67
@@ -460,15 +460,15 @@ def foam_f(o1):
 			# 	x_stop = random.randint(90, 200)
 			# 	y_stop = random.randint(-20, 200)
 
-			x_stop = random.randint(100, 600)
+			x_stop = random.randint(51, 700)
 			# # x_stop = 600
-			y_stop = random.randint(-50, 200)
+			y_stop = random.randint(-99, 150)
 			# y_stop = -100
 			#
-			xy_proj[:, 0] = np.linspace(100, x_stop, num=num_p)
+			xy_proj[:, 0] = np.linspace(50, x_stop, num=num_p)
 			xy_proj[:, 1] = np.linspace(-100, y_stop, num=num_p)
 
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=2, loc=0)
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=5, b=2, loc=0)
 		else:
 			raise Exception("h not 0, 1, 2")
 
