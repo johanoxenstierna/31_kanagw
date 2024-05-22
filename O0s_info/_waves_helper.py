@@ -2,7 +2,7 @@
 import numpy as np
 import P
 import scipy
-from scipy.stats import beta, multivariate_normal
+from scipy.stats import beta, multivariate_normal, dirichlet
 from src.trig_functions import min_max_normalization, min_max_normalize_array
 
 
@@ -28,77 +28,75 @@ def gen_stns():
 
     C = 4
 
-    FRAMES = P.FRAMES_TOT
-    # FRAMES = 500
+    # FRAMES = P.FRAMES_TOT
+    FRAMES = 500
 
-    rotation_angle = np.linspace(0.2 * np.pi, 0.1 * np.pi, FRAMES)
-    rvs = []
+    '''OBS this is not aligned in any sensical way'''
+    rotation_angle = np.linspace(0.95 * np.pi, 1.2 * np.pi, FRAMES)
+    # rotation_angle = np.full((FRAMES,), fill_value=1.01 * np.pi)
+    mvns = []
 
-    mean = [P.NUM_Z / 2, P.NUM_X / 2]
-    C = np.linspace(30, 4, num=FRAMES)  # less=thinner break
+    mean = [P.NUM_Z / 2, P.NUM_X / 2]  # TODO: move it.  -
+    C = np.linspace(30, 29, num=FRAMES)  # less=thinner break
 
     for ii in range(FRAMES):
 
         angle = rotation_angle[ii]
-        cov = np.array([[C[ii], C[ii] - C[ii] / 10], [C[ii] - C[ii] / 10, C[ii]]])
+        cov_b = C[ii] * 20
+        cov = np.array([[cov_b, 0.99 * cov_b],
+                        [0.99 * cov_b, cov_b]])  # more const: less spread
         rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],
                                     [np.sin(angle), np.cos(angle)]])
         rotated_cov = np.dot(np.dot(rotation_matrix, cov), rotation_matrix.T)
-        rv = multivariate_normal(mean, rotated_cov)
-        rvs.append(rv.rvs())
-
-    # for ii in range(FRAMES):
-    #     print(ii)
-
-        # rv = multivariate_normal(mean=[P.NUM_Z / 2, P.NUM_X / 2], cov=[[P.NUM_Z / C, P.NUM_Z],
-        #                                                                [P.NUM_Z, P.NUM_Z * (C * 2)]])  # more=more visible
-        # zx = P.NUM_Z
-        # xz = P.NUM_Z
-        # xx = P.NUM_Z * (C * 2)
-        # rv = multivariate_normal(mean=[P.NUM_Z / 2, P.NUM_X / 2], cov=[[ZZ[ii], zx],
-        #                                                                [xz, XX[ii]]])  # more=more visible
-        # rv = multivariate_normal(mean=[P.NUM_Z / 2, P.NUM_X / 2], cov=_cov)  # more=more visible
+        mv = multivariate_normal(mean, rotated_cov)
+        mvns.append(mv.rvs())
 
         BOUND_LO_y = 2
-        BOUND_UP_y = 4
-        BOUND_MI_y = 3
+        BOUND_UP_y = 3
+        BOUND_MI_y = 2.5
 
         input_z, input_x = np.mgrid[0:P.NUM_Z:1, 0:P.NUM_X:1]
         pos = np.dstack((input_z, input_x))
-        stns_ZX = rv.pdf(pos)
+        stns_ZX = mv.pdf(pos)
         stns_ZX = stns_ZX / np.max(stns_ZX)
         H_Z = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
         H_X = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
 
-        '''Normalize'''
-        stns_ZX = min_max_normalize_array(stns_ZX, y_range=[BOUND_LO_y, BOUND_UP_y])
+        # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # make sure theres a peak
+        # stns_ZX[:, int(P.NUM_X / 2)] += 0.0001
 
-        '''STN Z: One stn array per x'''
+        '''
+        STN Z: One stn array per x col. 
+        NEW: Require that each x col has a peak which is non first or last
+        '''
+        peak_inds_z = np.zeros((P.NUM_X,), dtype=np.uint16)
         # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # to make sure there is a peak
         for i in range(P.NUM_X):  # OBS 0 is closest to screen!
-            stns_ZX[:, i] += 0.0001  # to make sure there is a peak
             peak = np.argmax(stns_ZX[:, i])
-            stns_ZX[:peak, i] *= np.exp(np.linspace(start=-0.5, stop=0, num=peak))
+            # if peak == 0 or peak == len(stns_ZX[:, i]):
+            #     raise Exception("Require that stn z peaks are not first or last")
 
+            peak_inds_z[i] = peak
+            stns_ZX[:peak, i] *= np.exp(np.linspace(start=-4.5, stop=0, num=peak))  # everything until peak (from bottom) reduced
+            stns_ZX[:, i] = min_max_normalize_array(stns_ZX[:, i], y_range=[BOUND_LO_y, BOUND_UP_y])
             h_z = np.copy(stns_ZX[:, i])
             h_z[:peak] = 0
             H_Z[:, i] = h_z
 
-        '''STN X: One stn array per z'''
-        # stns_ZX[:, int(P.NUM_X / 2)] += 0.0001  # to make sure there is a peak
+        '''
+        STN X: One stn array per z
+        '''
         for i in range(P.NUM_Z):  # OBS 0 is closest to screen!
-            stns_ZX[i, :] += 0.0001  # to make sure there is a peak
             peak = np.argmax(stns_ZX[i, :])
-            stns_ZX[i, peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))
+            stns_ZX[i, peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))  # NO normalization: ONLY SHRINKAGE
 
             h_x = np.copy(stns_ZX[i, :])
             h_x[peak:] = 0
             H_X[i, :] = h_x
 
-        # np.save(PATH_OUT, stns_ZX)
+        SPLIT_ZX = [0.5, 0.5]
 
-        SPLIT_ZX = [0.8, 0.2]
-
+        '''H'''
         H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
 
         inds_buildup = np.where((BOUND_LO_y <= H_Z[:, :]) & (H_Z[:, :] <= BOUND_MI_y))
@@ -122,6 +120,8 @@ def gen_stns():
 
         stns_TZX[ii, :, :] = stns_ZX
         TH[ii, :, :] = H
+
+        brkpnt = 4
 
     np.save(PATH_OUT, stns_TZX)
 

@@ -3,7 +3,7 @@ import copy
 import matplotlib.pyplot as plt
 
 import P
-from src.trig_functions import min_max_normalization
+from src.trig_functions import min_max_normalization, min_max_normalize_array
 import random
 import scipy
 from scipy.stats import beta, gamma
@@ -66,7 +66,7 @@ def gerstner_waves(o1, o0):
 	# SS = [0]
 	# SS = [1]
 	# SS = [2]
-	# SS = [0, 2]
+	# SS = [0, 1]
 	# if P.COMPLEXITY == 0:
 	# 	SS = [0, 3]
 	# elif P.COMPLEXITY == 1:
@@ -86,7 +86,7 @@ def gerstner_waves(o1, o0):
 		if w == 0:  #
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			d = np.array([0.13, -0.87])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([0.4,  -0.6])  # OBS this is multiplied with x and z, hence may lead to large y!
+			d = np.array([0.25,  -0.75])  # OBS this is multiplied with x and z, hence may lead to large y!
 			c = 0.15  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
@@ -99,14 +99,14 @@ def gerstner_waves(o1, o0):
 
 		# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
-			# d = np.array([0.13, -0.87])
 			d = np.array([0.25, -0.75])
+			d = np.array([0.3, -0.7])
 			# d = np.array([0.9, -0.1])
 			# c = 0.1  # [-0.03, -0.015] ?????
-			c = 0.1  # [0.1, 0.02]
+			c = 0.15  # [0.1, 0.02]
 			if P.COMPLEXITY == 1:
 				c /= 5
-			lam = 600  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
+			lam = 900  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			# stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
 			# stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
@@ -141,11 +141,11 @@ def gerstner_waves(o1, o0):
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
 
 			if w != 2:  # SMALL ONES MOVE LEFT
-				xy[i, 0] += stn * np.cos(y)  # this one needs fixing due to foam
+				xy[i, 0] += (stn * np.cos(y)) / 3  # this one needs fixing due to foam
 			elif w == 2:  # small ones
-				xy[i, 0] -= stn * np.cos(y)
+				xy[i, 0] -= (stn * np.cos(y)) / 3
 
-			xy[i, 1] += stn * np.sin(y)
+			xy[i, 1] += (stn * np.sin(y)) / 3
 
 			if w == 0:
 				xy0[i, 0] = stn * np.cos(y)
@@ -340,16 +340,18 @@ def foam_f(o1):
 
 		# y_max_ind = int(len(xy_tp0) * 0.1)
 		y_max_ind = EARLINESS_SHIFT
-		y_max = xy_tp[y_max_ind, 1]
+		y_peak0 = xy_tp[y_max_ind, 1]
 		y_min_ind = np.argmin(xy_tp[:, 1])
 		y_min = xy_tp[y_min_ind, 1]
 		y_peak1 = xy_tp[-1, 1]
+		y_fall_dist = y_peak1 - y_min
 
 		x_max_ind = np.argmax(xy_tp[:, 0])  # DOESNT WORK WITH MULTIPLE WAVES. TODO: USE PI INSTEAD
 		x_max = xy_tp[x_max_ind, 0]
 		x_min_ind = np.argmin(xy_tp[:, 0])
 		x_min = xy_tp[x_min_ind, 0]
 		x_peak_ind1 = xy_tp[-1, 0]
+		x_right_dist = x_max - x_min
 
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
@@ -359,10 +361,12 @@ def foam_f(o1):
 
 		num_p = len(xy_tp0)
 
-		v_frame = abs(xy_t0[y_max_ind + 1, 0] - xy_t0[y_max_ind, 0])  # perhaps should be zero bcs xy_tp already includes all v that is needed?
-		v_p = 1
+		# v_frame = abs(xy_t0[y_max_ind + 1, 0] - xy_t0[y_max_ind, 0])  # perhaps should be zero bcs xy_tp already includes all v that is needed?
+		# v_p = 1
 
 		xy_proj = np.zeros(shape=(num_p, 2))
+		xy_proj[:, 0] = np.linspace(0, 1, num=num_p)  # DEFAULT VALUES COMPULSORY
+		xy_proj[:, 1] = np.linspace(0, 1, num=num_p)
 
 		'''
 		THETA
@@ -377,7 +381,10 @@ def foam_f(o1):
 		TODO: Use H: Its discretized
 		'''
 		alpha_UB = 1
-		alpha_mask_t = np.zeros((len(xy_tp0),))
+
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2.5, b=10, loc=0)  # HAVE TO HAVE A PLACEHOLDER
+		alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0, alpha_UB])
+
 		# if h > 2.5:
 		# 	alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=2, loc=0)
 		# elif stn > 2:
@@ -390,8 +397,6 @@ def foam_f(o1):
 		# 	alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2.5, b=10, loc=0)  # ONLY FIRST PART
 		# 	adf = 5
 
-
-
 		'''
 		UPDATE: THIS EQ IS COMPLEX AND NOT WORKING. SHOULD BE EQUAL FOR ALL PARTICLES
 		Perhaps need a map of the zx -> y surface and then one can know exactly where a particle will launch up from
@@ -400,45 +405,53 @@ def foam_f(o1):
 
 		# if h < 2 and h >= 0.001:  # build up
 		if h == 1:  # build up
-			xy_proj[:, 0] = np.linspace(0, 1, num=num_p)  # 400
-			xy_proj[:, 1] = np.linspace(0, 25, num=num_p)
+
+			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 10 and \
+					y_fall_dist > 0 and x_right_dist > 0:  # y_min occurs after y_max and x_min occurs after x_max
+				x_right_dist *= 1.5
+				xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
+
 			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=12, loc=0)  # ONLY FIRST PART
-			if random.random() < 0.05:
+			if random.random() < 0.05:  # flying
 				xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
 				xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
 				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
 
 		elif h == 2:  # breaking
-			xy_proj[:, 0] = np.linspace(0, 200, num=num_p)  # 1000
-			# xy_proj[:, 1] = 4 * t_lin_p - t_lin_p ** 2  # first one: more=more v up, i.e. will fall less
-			if y_min_ind - y_max_ind > 20:  # y_min occurs after y_max
-				y_up_dist = y_peak1 - y_min  # so its just parsed
-				if y_up_dist > 20:
-					y_up_dist += random.randint(300, 301)  # its flipped below
-					'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
-					xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_up_dist, num=len(xy_proj[y_min_ind:, 1]))
 
-			if x_min_ind - x_max_ind > 10:  # x_min occurs after x_max
-				x_right_dist = x_max - x_min  # just parsed
-				if x_right_dist > 20:
-					x_right_dist += random.randint(0, 100)  # -220, 120
-					xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
-					aa = 5
+			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 10 and \
+					y_fall_dist > 0 and x_right_dist > 0:  # y_min occurs after y_max and x_min occurs after x_max
 
-			num_first = len(xy_proj[:y_min_ind, 0])
-			alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
-			alpha_mask_0 = min_max_normalization(alpha_mask_0, y_range=[0.0, alpha_UB])
-			num_second = len(xy_proj[y_min_ind:, 0])
-			alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
-			alpha_mask_1 = min_max_normalization(alpha_mask_1, y_range=[0.0, alpha_UB])
+				# y_fall_dist += random.randint(300, 301)  # its flipped below
+				y_fall_dist *= 1  # its flipped below
+				'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
+				# xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[y_min_ind:, 1]))
+				xy_proj[:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[:, 1]))
 
-			# alpha_mask_t[peak_ind0:peak_ind0 + num_first] = alpha_mask_0
-			# alpha_mask_t[peak_ind0 + num_first:peak_ind1] = alpha_mask_1
+				# if x_right_dist > 0:
+				# x_right_dist += random.randint(0, 100)  # -220, 120
+				x_right_dist *= 1.1
+				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
+				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
-			alpha_mask_t[0:num_first] = alpha_mask_0
-			alpha_mask_t[num_first:] = alpha_mask_1
+				num_first = len(xy_proj[:y_min_ind, 0])
+				alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
+				alpha_mask_0 = min_max_normalize_array(alpha_mask_0, y_range=[0.0, alpha_UB])
 
-		else:  # post. Make more chaotic
+				num_second = len(xy_proj[y_min_ind:, 0])
+				alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
+				alpha_mask_1 = min_max_normalize_array(alpha_mask_1, y_range=[0.0, alpha_UB])
+
+				alpha_mask_t[0:num_first] = alpha_mask_0
+				# alpha_mask_t[num_first:] = alpha_mask_1
+
+				aa = 67
+
+		elif h == 0:
+			'''
+			ChaosTK: 
+			
+			'''
 
 			# if random.random() < 0.1:  # moves down
 			# 	x_stop = random.randint(90, 200)
@@ -447,18 +460,28 @@ def foam_f(o1):
 			# 	x_stop = random.randint(90, 200)
 			# 	y_stop = random.randint(-20, 200)
 
-			x_stop = random.randint(0, 200)
-			y_stop = random.randint(-50, 0)
+			x_stop = random.randint(100, 600)
+			# # x_stop = 600
+			y_stop = random.randint(-50, 200)
+			# y_stop = -100
+			#
+			xy_proj[:, 0] = np.linspace(100, x_stop, num=num_p)
+			xy_proj[:, 1] = np.linspace(-100, y_stop, num=num_p)
 
-			xy_proj[:, 0] = np.linspace(0, x_stop, num=num_p)
-			xy_proj[:, 1] = np.linspace(0, y_stop, num=num_p)
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=10, loc=0)
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=2, loc=0)
+		else:
+			raise Exception("h not 0, 1, 2")
 
-		alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[0.0, alpha_UB])
+		# alpha_mask_t = min_max_normalization(alpha_mask_t, y_range=[0.0, alpha_UB])
+		alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0.0, alpha_UB])
 		alphas[peak_ind0:peak_ind1] = alpha_mask_t
+		# TODO: ADD TEST for nan
 
 		'''OBBBBBBSSSS REMEMBER!!!! YOUR SHIFTING IT!!!! NOT SETTING'''
 		xy_t[peak_ind0:peak_ind1, :] += xy_proj
+
+	if np.max(alphas) > 1.000:
+		asdf = 5
 
 	return xy_t, alphas, rotation0, scale
 
