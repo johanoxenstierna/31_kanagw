@@ -8,7 +8,8 @@ from src.trig_functions import min_max_normalization, min_max_normalize_array
 
 def gen_stns():
     """New: Use mvn"""
-    PATH_OUT = './O0s_info/stns_TZX.npy'
+    PATH_OUT_stns_TZX = './O0s_info/stns_TZX.npy'
+    PATH_OUT_TH = './O0s_info/TH.npy'
     stns_TZX = np.zeros(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), dtype=np.float16)
     TH = np.zeros(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), dtype=np.uint16)
 
@@ -34,29 +35,32 @@ def gen_stns():
 
 
     '''OBS this is not aligned in any sensical way'''
-    rotation_angle = np.linspace(0.95 * np.pi, 1.2 * np.pi, FRAMES)
+    rotation_angle = np.linspace(0.95 * np.pi, 1.1 * np.pi, FRAMES)
     # rotation_angle = np.full((FRAMES,), fill_value=1.01 * np.pi)
-    mvns = []
+    # mvns = []
 
-    mean = [P.NUM_Z / 2, P.NUM_X / 2]  # TODO: move it.  -
-    C = np.linspace(30, 29, num=FRAMES)  # less=thinner break
-    cov_b_mult = np.linspace(2, 20, num=FRAMES)
+    means = [np.linspace(0.6 * P.NUM_Z, 0.5 * P.NUM_Z, num=FRAMES),
+             np.linspace(0.6 * P.NUM_X, 0.4 * P.NUM_X, num=FRAMES)]  # Z, X
+
+    C = np.linspace(2000, 1000, num=FRAMES)  # less=thinner break
+    # cov_b_mult = np.linspace(200, 10, num=FRAMES)
 
     for ii in range(FRAMES):
 
         angle = rotation_angle[ii]
-        cov_b = C[ii] * cov_b_mult[ii]
+        cov_b = C[ii]
+        mean = [means[0][ii], means[1][ii]]
         cov = np.array([[cov_b, 0.99 * cov_b],
                         [0.99 * cov_b, cov_b]])  # more const: less spread
         rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],
                                     [np.sin(angle), np.cos(angle)]])
         rotated_cov = np.dot(np.dot(rotation_matrix, cov), rotation_matrix.T)
         mv = multivariate_normal(mean, rotated_cov)
-        mvns.append(mv.rvs())
+        # mvns.append(mv.rvs())
 
         BOUND_LO_y = 2
         BOUND_UP_y = 3
-        BOUND_MI_y = 2.5
+        BOUND_MI_y = 2.2
 
         input_z, input_x = np.mgrid[0:P.NUM_Z:1, 0:P.NUM_X:1]
         pos = np.dstack((input_z, input_x))
@@ -80,7 +84,7 @@ def gen_stns():
             #     raise Exception("Require that stn z peaks are not first or last")
 
             peak_inds_z[i] = peak
-            stns_ZX[:peak, i] *= np.exp(np.linspace(start=-4.5, stop=0, num=peak))  # everything until peak (from bottom) reduced
+            stns_ZX[:peak, i] *= np.exp(np.linspace(start=-3.5, stop=0, num=peak))  # everything until peak (from bottom) reduced
             stns_ZX[:, i] = min_max_normalize_array(stns_ZX[:, i], y_range=[BOUND_LO_y, BOUND_UP_y])
             h_z = np.copy(stns_ZX[:, i])
             h_z[:peak] = 0
@@ -97,7 +101,7 @@ def gen_stns():
             h_x[peak:] = 0
             H_X[i, :] = h_x
 
-        SPLIT_ZX = [0.5, 0.5]
+        SPLIT_ZX = [0.8, 0.2]
 
         '''H'''
         H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
@@ -126,7 +130,8 @@ def gen_stns():
 
         brkpnt = 4
 
-    np.save(PATH_OUT, stns_TZX)
+    np.save(PATH_OUT_stns_TZX, stns_TZX)
+    np.save(PATH_OUT_TH, TH)
 
     return stns_TZX, TH
 

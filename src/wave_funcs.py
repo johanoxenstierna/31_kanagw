@@ -48,6 +48,8 @@ def gerstner_waves(o1, o0):
 	peaks1 = np.zeros((frames_tot,))
 	peaks2 = np.zeros((frames_tot,))
 
+	YT = np.zeros((frames_tot, P.NUM_Z, P.NUM_X), dtype=np.float16)
+
 	# y_only_2 = np.zeros((frames_tot,))
 
 	# stns_t = np.linspace(0.99, 0.2, num=frames_tot)
@@ -63,7 +65,7 @@ def gerstner_waves(o1, o0):
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
 	SS = [0, 1, 2]
-	# SS = [0]
+	SS = [0]
 	# SS = [1]
 	# SS = [2]
 	# SS = [0, 1]
@@ -82,7 +84,7 @@ def gerstner_waves(o1, o0):
 		if w == 0:  #
 			d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([0.3, -0.7])  # OBS this is multiplied with x and z, hence may lead to large y!
-			# d = np.array([0.25,  -0.75])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.8,  -0.2])  # OBS this is multiplied with x and z, hence may lead to large y!
 			c = 0.15  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
@@ -137,12 +139,14 @@ def gerstner_waves(o1, o0):
 			y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
 
 			if w != 2:  # SMALL ONES MOVE LEFT
-				xy[i, 0] += (stn * np.cos(y)) / 2.5  # this one needs fixing due to foam
+				xy[i, 0] += (stn * np.cos(y)) / 2  # this one needs fixing due to foam
 			elif w == 2:  # small ones
-				xy[i, 0] -= (stn * np.cos(y)) / 2.5
+				xy[i, 0] -= (stn * np.cos(y)) / 2
 
-			xy[i, 1] += (stn * np.sin(y)) / 2.5
+			xy[i, 1] += (stn * np.sin(y)) / 2
+			YT[i, o1.z_key, o1.x_key] += (stn * np.sin(y)) / 2
 
+			'''Wave specific'''
 			if w == 0:
 				xy0[i, 0] = stn * np.cos(y)
 				xy0[i, 1] = stn * np.sin(y)
@@ -223,7 +227,7 @@ def gerstner_waves(o1, o0):
 	# scale = min_max_normalization(scale, y_range=[1, 1.3])
 	scale = min_max_normalization(scale, y_range=[0.99, 1.1])
 
-	return xy, dxy, alphas, rotation, peaks, xy0, dxy0, xy1, dxy1, xy2, dxy2, scale
+	return xy, dxy, alphas, rotation, peaks, xy0, dxy0, xy1, dxy1, xy2, dxy2, scale, YT
 
 
 def foam_b(o1, peak_inds):
@@ -302,7 +306,8 @@ def foam_f(o1):
 	# v_mult = o1.o0.gi.vmult_zx[o1.z_key, o1.x_key]
 	# h_mult = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
 	# stn = o1.o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
-	h = o1.o0.gi.TH[0, o1.z_key, o1.x_key]
+
+	# h = o1.o0.gi.TH[0, o1.z_key, o1.x_key]
 	# x_displ = 500
 
 	for i in range(len(peak_inds) - 1):
@@ -313,6 +318,7 @@ def foam_f(o1):
 		'''OBS THIS WRITES TO xy_t STRAIGHT'''
 		xy_tp = np.copy(xy_t[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
 		xy_tp0 = np.copy(xy_t0[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
+		h = o1.o0.gi.TH[peak_ind0, o1.z_key, o1.x_key]
 
 		if len(xy_tp0) < MIN_DIST_FRAMES_BET_WAVES:
 			raise Exception("W   T   F")
@@ -349,6 +355,9 @@ def foam_f(o1):
 		x_peak_ind1 = xy_tp[-1, 0]
 		x_right_dist = x_max - x_min
 
+		yy = o1.YT[0, 3, 3]
+		asdf = 5
+
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
 		NUM SHOULD BE SPLIT INTO TWO PARTS (Maybe not)
@@ -369,8 +378,8 @@ def foam_f(o1):
 		pi = bug, 2 pi = bug, 0.5 pi = straight up, 0.25 pi = 45 deg, 0.4 pi = more up, 0.1 pi = more horiz. 0.5-1 = neg x values
 		Flipping doesn't change any here. 
 		'''
-		theta_p = 0.25 * np.pi  # obs flipped? Increase to turn up
-		G = 9.8
+		# theta_p = 0.25 * np.pi  # obs flipped? Increase to turn up
+		# G = 9.8
 
 		'''
 		Alpha
@@ -402,34 +411,43 @@ def foam_f(o1):
 		# if h < 2 and h >= 0.001:  # build up
 		if h == 1:  # build up
 
-			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 10 and \
+			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 15 and \
 					y_fall_dist > 0 and x_right_dist > 0:  # y_min occurs after y_max and x_min occurs after x_max
 				x_right_dist *= 1.5
 				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
 				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
+				'''y should not go down'''
+				y_fall_dist *= 2
+				xy_proj[:, 1] += np.linspace(start=0, stop=y_fall_dist, num=len(xy_proj[:, 0]))
+
 			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=8, loc=0)  # ONLY FIRST PART
-			if random.random() < 0.05:  # flying
-				xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
-				xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
-				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
+			# if random.random() < 0.05:  # flying
+			# 	xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
+			# 	xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
+			# 	alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
 
 		elif h == 2:  # breaking
 
-			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 10 and \
+			if y_min_ind - y_max_ind > 20 and x_min_ind - x_max_ind > 15 and \
 					y_fall_dist > 0 and x_right_dist > 0:  # y_min occurs after y_max and x_min occurs after x_max
+				'''TODO: the shifting needs to correspond to the gerstner wave'''
+
+				# if x_right_dist > 0:
+				# x_right_dist += random.randint(0, 100)  # -220, 120
+				# x_right_dist *= 1.5
+				x_right_dist *= abs(np.random.normal(loc=1.5, scale=0.5))
+				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
+				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
 				# y_fall_dist += random.randint(300, 301)  # its flipped below
 				y_fall_dist *= 1  # its flipped below
+				y_fall_dist *= abs(np.random.normal(loc=1, scale=0.5))
 				'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
 				# xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[y_min_ind:, 1]))
 				xy_proj[:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[:, 1]))
 
-				# if x_right_dist > 0:
-				# x_right_dist += random.randint(0, 100)  # -220, 120
-				x_right_dist *= 1.5
-				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
-				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
+
 
 				# num_first = len(xy_proj[:y_min_ind, 0])
 				# alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
@@ -439,8 +457,9 @@ def foam_f(o1):
 				# alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
 				# alpha_mask_1 = min_max_normalize_array(alpha_mask_1, y_range=[0.0, alpha_UB])
 
-				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=2, loc=0)  # HAVE TO HAVE A PLACEHOLDER
-				alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0, alpha_UB])
+				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=6, loc=0)  # HAVE TO HAVE A PLACEHOLDER
+				alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0.0, alpha_UB])
+				# print("Adsfasdf")
 
 				# alpha_mask_t[0:num_first] = alpha_mask_0
 				# alpha_mask_t[num_first:] = alpha_mask_1
@@ -460,15 +479,15 @@ def foam_f(o1):
 			# 	x_stop = random.randint(90, 200)
 			# 	y_stop = random.randint(-20, 200)
 
-			x_stop = random.randint(51, 700)
+			x_stop = random.randint(200, 600)
 			# # x_stop = 600
-			y_stop = random.randint(-99, 150)
+			y_stop = random.randint(-99, 50)
 			# y_stop = -100
 			#
 			xy_proj[:, 0] = np.linspace(50, x_stop, num=num_p)
 			xy_proj[:, 1] = np.linspace(-100, y_stop, num=num_p)
 
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=5, b=2, loc=0)
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=4, b=2, loc=0)
 		else:
 			raise Exception("h not 0, 1, 2")
 

@@ -19,7 +19,7 @@ class O0C(AbstractObject):
         # _s.O1b = {}
         # _s.O1f = {}
 
-        _s.T = np.zeros(shape=(72, 128, gi.o1_gi['frames_tot']))
+        # _s.T = np.zeros(shape=(72, 128, gi.o1_gi['frames_tot']))
 
     def populate_T(_s, xy_t, xy, dxy):
         """

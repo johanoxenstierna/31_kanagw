@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import random
 
 from matplotlib.pyplot import imread
 from src.load_pics import load_pics
@@ -95,6 +96,7 @@ class GenObjects:
 
         print("DIAMETER: " + str(d))
 
+        '''Update: cant run static and f in same loop anymore cuz landing needed'''
         for i in range(P.NUM_X):
             for j in range(P.NUM_Z):  # smallest ind = bottom
                 pxl_x = pxls_x[i]
@@ -124,20 +126,26 @@ class GenObjects:
                 # o1f_b.gen_b(o1)
                 # O0['waves'].O1[id_f_b] = o1f_b
 
+        for i in range(P.NUM_X):
+            for j in range(P.NUM_Z):  # smallest ind = bottom
                 if P.A_F:
+                    o1s = O0['waves'].O1[str(i) + '_' + str(j) + '_static']
                     type = 'f'  # NOT USED FOR SMALL ONES
                     id_f = str(i) + '_' + str(j) + '_' + type
                     o1f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                    o1f.gen_f(o1)
+                    o1f.gen_f(o1s)
                     O0['waves'].O1[id_f] = o1f
 
                     if P.A_K:
-                        if (j, i) in R_inds_used:  # totally ok to have inds too large: they just wont appear in smaller animation
+                        if _s.gis['waves'].TH[0, j, i] == 2 and random.random() < 0.5:
+
+                        # if (j, i) in R_inds_used:  # totally ok to have inds too large: they just wont appear in smaller animation
                             type = 'r'  # NOT USED FOR SMALL ONES
                             id_r = str(i) + '_' + str(j) + '_' + type
-                            r_ = R_[str(j) + '_' + str(i)]
+                            # r_ = R_[str(j) + '_' + str(i)]
+                            _, r_ = random.choice(list(R_.items()))
                             o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
-                            o1r.gen_f(o1)
+                            o1r.gen_f(o1f)
                             # o1r.gen_r(o1)
                             o1r.scale = min_max_normalization(o1r.scale, y_range=[0.5, 1.3])
                             # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed

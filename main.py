@@ -15,6 +15,7 @@ import random
 random.seed(7)  # ONLY HERE
 np.random.seed(7)  # ONLY HERE
 import time
+import pickle
 import matplotlib.animation as animation
 from src import gen_objects
 from src.ani_helpers import *
@@ -41,6 +42,8 @@ g.gen_backgr(ax_b, axs0, axs1)
 O0 = g.gen_O0()
 # O0 = g.gen_O1(O0)
 O0 = g.gen_O1_new(O0)
+# with open('./O0', 'wb') as f:
+#     pickle.dump(O0, f)
 
 plt.gca().invert_yaxis()
 
@@ -58,27 +61,27 @@ def animate(i):
 
     for o0_id, o0 in O0.items():
 
-        for o1_id, o1 in o0.O1.items():  # this loop is super fast
-
-            if i in o1.gi['init_frames']:
-
-                if o1.drawn == 0:
-                    prints += "  adding f"
-                    exceeds_frame_max, how_many = o1.check_frame_max(i, o1.gi['frames_tot'])
-                    if exceeds_frame_max == True:
-                        print("EXCEEDS MAX. This means objects at end of animation will go faster. \n")
-                        o1.gi['frames_tot'] = how_many
-
-                    # o1.dyn_gen()
-                    o1.drawn = 1  # this variable can serve multiple purposes (see below, and in set_clock)
-                    o1.set_frame_ss(i, o1.gi['frames_tot'])  # uses AbstractSSS
-
-                    ''' EVIL BUG HERE. An o1 cannot be allowed to init new O2 children if old children
-                    are still being drawn!!! THIS MEANS o1 FRAMES_TOT MUST > O2 FRAMES TOT
-                    UPDATE: Try releasing o1 once max frame stop of its sps reached. '''
-
-                else:
-                    prints += "  no free o1"
+        # for o1_id, o1 in o0.O1.items():  # this loop is super fast
+        #
+        #     if i in o1.gi['init_frames']:
+        #
+        #         if o1.drawn == 0:
+        #             prints += "  adding f"
+        #             exceeds_frame_max, how_many = o1.check_frame_max(i, o1.gi['frames_tot'])
+        #             if exceeds_frame_max == True:
+        #                 print("EXCEEDS MAX. This means objects at end of animation will go faster. \n")
+        #                 o1.gi['frames_tot'] = how_many
+        #
+        #             # o1.dyn_gen()
+        #             o1.drawn = 1  # this variable can serve multiple purposes (see below, and in set_clock)
+        #             o1.set_frame_ss(i, o1.gi['frames_tot'])  # uses AbstractSSS
+        #
+        #             ''' EVIL BUG HERE. An o1 cannot be allowed to init new O2 children if old children
+        #             are still being drawn!!! THIS MEANS o1 FRAMES_TOT MUST > O2 FRAMES TOT
+        #             UPDATE: Try releasing o1 once max frame stop of its sps reached. '''
+        #
+        #         else:
+        #             prints += "  no free o1"
 
         for o1_id, o1 in o0.O1.items():  # this is where most of the CPU time goes
 

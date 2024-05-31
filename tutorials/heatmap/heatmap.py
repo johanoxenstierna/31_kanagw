@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.pyplot import imread
 from matplotlib.patches import Rectangle
+import P
 
 '''Cant share these unfortunately so replace with your own'''
 # heatmaps = np.load('./tutorials/heatmap/heatmaps.npy')
 heatmaps = np.load('./O0s_info/stns_TZX.npy')
+# heatmaps = np.load('./O0s_info/TH.npy')
 # heatmap = np.flipud(heatmaps[0, :, :])
 # heatmap = np.flipud(heatmaps[:, :])
 background_pic = imread('./tutorials/heatmap/background_pic.png')
@@ -37,7 +39,7 @@ im_ax = []  # list of drawables
 # cmap = plt.cm.YlOrRd_r
 cmap = plt.cm.PuBu_r
 heatmap = np.flipud(heatmaps[0, :, :])
-im_ax.append(ax_left.imshow(heatmap, extent=[0, 200, 0, 100], alpha=0.99, cmap=cmap, zorder=1))
+im_ax.append(ax_left.imshow(heatmap, extent=[0, P.NUM_X, 0, P.NUM_Z], alpha=0.99, cmap=cmap, zorder=1))
 
 def init():
     return im_ax
@@ -49,7 +51,7 @@ def animate(i):
     im_ax.pop()
     prints = "i: " + str(i) + " len_mi_ax: " + str(len(im_ax))
     heatmap = np.flipud(heatmaps[i, :, :])
-    im_ax.append(ax_left.imshow(heatmap, extent=[0, 200, 0, 100],
+    im_ax.append(ax_left.imshow(heatmap, extent=[0, P.NUM_X, 0, P.NUM_Z],
                                 alpha=0.99, cmap=cmap, zorder=1))
 
     print(prints)

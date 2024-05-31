@@ -16,7 +16,7 @@ class AbstractObject:
     """
 
     def __init__(_s):
-        _s.drawn = 0  # 0: not drawn, 1: start drawing, 2. continue drawing, 3. end drawing, 4: dynamic flag usage
+        _s.drawn = 1  # 0: not drawn, 1: start drawing, 2. continue drawing, 3. end drawing, 4: dynamic flag usage
         _s.clock = 0
         _s.frame_ss = None
         _s.index_axs0 = None
