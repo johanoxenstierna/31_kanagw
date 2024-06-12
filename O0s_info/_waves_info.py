@@ -44,7 +44,14 @@ class Waves_info:
             _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         # _s.stns_ZX, _s.H = gen_stns_old()
-        _s.stns_TZX, _s.TH = gen_stns()
+        if P.QUERY_STNS == 0:
+            print("Building stns ...")
+            _s.stns_TZX, _s.TH = gen_stns()
+            print("Done uilding stns ...")
+        else:
+            _s.stns_TZX = np.load('./O0s_info/stns_TZX.npy')
+            _s.TH = np.load('./O0s_info/TH.npy')
+
 
         '''Distance_mult applied after static built with  gerstner(). Then b and f built on that.  
         TODO: stns_zx0 should be tilted

@@ -2,6 +2,8 @@ import os
 import json
 import numpy as np
 import random
+import time
+import psutil
 
 from matplotlib.pyplot import imread
 from src.load_pics import load_pics
@@ -96,8 +98,14 @@ class GenObjects:
 
         print("DIAMETER: " + str(d))
 
-        '''Update: cant run static and f in same loop anymore cuz landing needed'''
-        for i in range(P.NUM_X):
+        '''
+        Update: cant run static and f in same loop anymore cuz landing needed
+        CPU time DOUBLED
+        '''
+        time0 = time.time()
+        for i in range(P.NUM_X):  # time scales linearly with num particles
+            print(str(i))
+            # print(str(i) + '  ' + str(psutil.swap_memory()))
             for j in range(P.NUM_Z):  # smallest ind = bottom
                 pxl_x = pxls_x[i]
                 pxl_z = pxls_z[j]
@@ -112,8 +120,15 @@ class GenObjects:
                     pic_static = np.load('./pictures/k0_cut/' + file_name)
 
                 '''OBS this combines multiple G waves'''
-                o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                o1.gen_static()
+
+                # time0 = time.time()
+                try:
+                    o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                    o1.gen_static()
+                except:
+                    adf = 5
+                # print(time.time() - time0)
+                # print("iii333")
                 O0['waves'].O1[id_static] = o1
 
                 '''Each static has two f linked to it "o1" below.
@@ -126,38 +141,51 @@ class GenObjects:
                 # o1f_b.gen_b(o1)
                 # O0['waves'].O1[id_f_b] = o1f_b
 
+        time_static = time.time() - time0
+        print("time static: " + str(time_static))
+
+        time0 = time.time()
         for i in range(P.NUM_X):
+            # print(i)
             for j in range(P.NUM_Z):  # smallest ind = bottom
                 if P.A_F:
                     o1s = O0['waves'].O1[str(i) + '_' + str(j) + '_static']
                     type = 'f'  # NOT USED FOR SMALL ONES
                     id_f = str(i) + '_' + str(j) + '_' + type
                     o1f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                    # time0 = time.time()
+
                     o1f.gen_f(o1s)
+                    # print(time.time() - time0)
+
                     O0['waves'].O1[id_f] = o1f
 
-                    if P.A_K:
-                        if _s.gis['waves'].TH[0, j, i] == 2 and random.random() < 0.5:
-
-                        # if (j, i) in R_inds_used:  # totally ok to have inds too large: they just wont appear in smaller animation
-                            type = 'r'  # NOT USED FOR SMALL ONES
-                            id_r = str(i) + '_' + str(j) + '_' + type
-                            # r_ = R_[str(j) + '_' + str(i)]
-                            _, r_ = random.choice(list(R_.items()))
-                            o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
-                            o1r.gen_f(o1f)
-                            # o1r.gen_r(o1)
-                            o1r.scale = min_max_normalization(o1r.scale, y_range=[0.5, 1.3])
-                            # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
-                            o1r.rotation *= 1.4
-                            # o1r.gen_r(o1f)
-                            O0['waves'].O1[id_r] = o1r
-                            # o1r.zorder += 2000
+                    # if P.A_K:
+                    #     if _s.gis['waves'].TH[0, j, i] == 2 and random.random() < 0.5:
+                    #
+                    #     # if (j, i) in R_inds_used:  # totally ok to have inds too large: they just wont appear in smaller animation
+                    #         type = 'r'  # NOT USED FOR SMALL ONES
+                    #         id_r = str(i) + '_' + str(j) + '_' + type
+                    #         # r_ = R_[str(j) + '_' + str(i)]
+                    #         _, r_ = random.choice(list(R_.items()))
+                    #         o1r = O1C(o1_id=id_r, pic=r_, o0=O0['waves'], type=type)
+                    #         o1r.gen_f(o1f)
+                    #         # o1r.gen_r(o1)
+                    #         o1r.scale = min_max_normalization(o1r.scale, y_range=[0.5, 1.3])
+                    #         # o1r.alphas = min_max_normalization(o1r.alphas, y_range=[0, 1])  # this one needs to be changed
+                    #         o1r.rotation *= 1.4
+                    #         # o1r.gen_r(o1f)
+                    #         O0['waves'].O1[id_r] = o1r
+                    #         # o1r.zorder += 2000
 
                 adf = 5
 
             print(i)
 
+        time_f = time.time() - time0
+
+        print("time static: " + str(time_static))
+        print("time f: " + str(time_f))
         asdf =5
 
         return O0

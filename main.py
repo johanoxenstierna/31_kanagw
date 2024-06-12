@@ -1,10 +1,15 @@
 """
 Matplotlib animation of projectiles, waves and clouds
--*zorder.
--*Foam f twist after h (probably just shift)
--*increase c
--*rotate_around
 
+Only create 1 stns and Y map (or whatever TF its called).
+
+A D D   N E W   W A V E
+
+-*Foam f twist after h (probably just shift)
+
+-zorder.
+-increase c
+-rotate_around
 -scale
 -tune foam in 1 and 2
 -MORERandom b foam flying into air.
@@ -114,7 +119,7 @@ ani = animation.FuncAnimation(fig, animate, frames=range(P.FRAMES_START, P.FRAME
 if WRITE == 0:
     plt.show()
 else:
-    ani.save('./vids/vid_' + str(WRITE) + '.mp4', writer=writer)
+    ani.save('./vids/vid_' + str(WRITE) + '_' + str(P.NUM_X) + '_' + str(P.NUM_Z) + '.mp4', writer=writer)
 
     # ani.save('./vids/vid_' + str(WRITE) + '.mov',
     #          codec="png",

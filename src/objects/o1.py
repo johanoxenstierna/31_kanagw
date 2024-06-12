@@ -25,8 +25,8 @@ class O1C(AbstractObject, AbstractSSS):
         _s.pic = pic  # the png
         _s.centroid = [int(pic.shape[0] / 2), int(pic.shape[1] / 2)]
         # _s.type = type
-        # _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
-        _s.gi = o0.gi.o1_gi  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
+        _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
+        # _s.gi = o0.gi.o1_gi  # REMOVE OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
         # ONLY OBJECTS THAT ARE MUTABLE ARE TO BE COPIED
 
         AbstractSSS.__init__(_s, o0, o1_id)
