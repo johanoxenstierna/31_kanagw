@@ -14,7 +14,7 @@ import P
 '''Cant share these unfortunately so replace with your own'''
 # heatmaps = np.load('./tutorials/heatmap/heatmaps.npy')
 heatmaps = np.load('./O0s_info/stns_TZX.npy')
-# heatmaps = np.load('./O0s_info/TH.npy')
+heatmaps = np.load('./O0s_info/TH.npy')
 # heatmap = np.flipud(heatmaps[0, :, :])
 # heatmap = np.flipud(heatmaps[:, :])
 background_pic = imread('./tutorials/heatmap/background_pic.png')

@@ -8,6 +8,7 @@ from src.trig_functions import min_max_normalization, min_max_normalize_array
 
 def gen_stns():
     """New: Use mvn"""
+
     PATH_OUT_stns_TZX = './O0s_info/stns_TZX.npy'
     PATH_OUT_TH = './O0s_info/TH.npy'
     stns_TZX = np.zeros(shape=(P.FRAMES_TOT, P.NUM_Z, P.NUM_X), dtype=np.float16)
@@ -29,23 +30,25 @@ def gen_stns():
 
     C = 4
 
-    FRAMES = 2000
+    FRAMES = 500
     if P.COMPLEXITY == 1:
         FRAMES = P.FRAMES_TOT
 
 
     '''OBS this is not aligned in any sensical way'''
-    rotation_angle = np.linspace(0.95 * np.pi, 1.1 * np.pi, FRAMES)
+    # rotation_angle = np.linspace(0.95 * np.pi, 1.1 * np.pi, FRAMES)
+    rotation_angle = np.linspace(0.9 * np.pi, 0.91 * np.pi, FRAMES)
     # rotation_angle = np.full((FRAMES,), fill_value=1.01 * np.pi)
     # mvns = []
 
-    means = [np.linspace(0.6 * P.NUM_Z, 0.5 * P.NUM_Z, num=FRAMES),
-             np.linspace(0.6 * P.NUM_X, 0.4 * P.NUM_X, num=FRAMES)]  # Z, X
+    means = [np.linspace(0.6 * P.NUM_Z, 0.61 * P.NUM_Z, num=FRAMES),
+             np.linspace(0.5 * P.NUM_X, 0.51 * P.NUM_X, num=FRAMES)]  # Z, X
     shifts = [np.linspace(0, 1, num=FRAMES, dtype=int),
               np.linspace(0, 1, num=FRAMES, dtype=int)]
 
-    C = np.linspace(2000, 1000, num=FRAMES)  # less=thinner break
+    C = np.linspace(200, 201, num=FRAMES)  # less=thinner break
     # cov_b_mult = np.linspace(200, 10, num=FRAMES)
+    cov_b = 800
 
     for ii in range(FRAMES):
 
@@ -53,7 +56,7 @@ def gen_stns():
             print(ii)
 
         angle = rotation_angle[ii]
-        cov_b = C[ii]
+        # cov_b = C[ii]
         mean = [means[0][ii], means[1][ii]]
         cov = np.array([[cov_b, 0.99 * cov_b],
                         [0.99 * cov_b, cov_b]])  # more const: less spread
@@ -65,62 +68,65 @@ def gen_stns():
 
         BOUND_LO_y = 2
         BOUND_UP_y = 3
-        BOUND_MI_y = 2.2
+        BOUND_MI_y = 2.5
 
         input_z, input_x = np.mgrid[0:P.NUM_Z:1, 0:P.NUM_X:1]
         pos = np.dstack((input_z, input_x))
-        stns_ZX = mv.pdf(pos)
+        stns_ZX = mv.pdf(pos).reshape([P.NUM_Z, P.NUM_X])
         stns_ZX = stns_ZX / np.max(stns_ZX)
         # aaa = shifts[0][ii]
-        stns_ZX = np.roll(stns_ZX, shift=shifts[0][ii], axis=1)
+        if P.NUM_Z > 6:
+            stns_ZX = np.roll(stns_ZX, shift=shifts[0][ii], axis=1)
         H_Z = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
         H_X = np.zeros(shape=(P.NUM_Z, P.NUM_X), dtype=np.float16)
 
         # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # make sure theres a peak
         # stns_ZX[:, int(P.NUM_X / 2)] += 0.0001
 
-        '''
-        STN Z: One stn array per x col. 
-        NEW: Require that each x col has a peak which is non first or last
-        '''
-        peak_inds_z = np.zeros((P.NUM_X,), dtype=np.uint16)
-        # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # to make sure there is a peak
-        for i in range(P.NUM_X):  # OBS 0 is closest to screen!
-            peak = np.argmax(stns_ZX[:, i])
-            # if peak == 0 or peak == len(stns_ZX[:, i]):
-            #     raise Exception("Require that stn z peaks are not first or last")
-
-            peak_inds_z[i] = peak
-            # stns_ZX[:peak, i] *= np.exp(np.linspace(start=-3.5, stop=0, num=peak))  # everything until peak (from bottom) reduced
-            stns_ZX[:, i] = min_max_normalize_array(stns_ZX[:, i], y_range=[BOUND_LO_y, BOUND_UP_y])
-            h_z = np.copy(stns_ZX[:, i])
-            h_z[:peak] = 0
-            H_Z[:, i] = h_z
+        # '''
+        # STN Z: One stn array per x col.
+        # NEW: Require that each x col has a peak which is non first or last
+        # '''
+        # peak_inds_z = np.zeros((P.NUM_X,), dtype=np.uint16)
+        # # stns_ZX[int(P.NUM_Z / 2), :] += 0.0001  # to make sure there is a peak
+        # for i in range(P.NUM_X):  # OBS 0 is closest to screen!
+        #     peak = np.argmax(stns_ZX[:, i])
+        #     # if peak == 0 or peak == len(stns_ZX[:, i]):
+        #     #     raise Exception("Require that stn z peaks are not first or last")
+        #
+        #     peak_inds_z[i] = peak
+        #     # stns_ZX[:peak, i] *= np.exp(np.linspace(start=-3.5, stop=0, num=peak))  # everything until peak (from bottom) reduced
+        #     stns_ZX[:, i] = min_max_normalize_array(stns_ZX[:, i], y_range=[BOUND_LO_y, BOUND_UP_y])
+        #     h_z = np.copy(stns_ZX[:, i])
+        #     h_z[:peak] = 0
+        #     H_Z[:, i] = h_z
 
         '''
         STN X: One stn array per z
         '''
         for i in range(P.NUM_Z):  # OBS 0 is closest to screen!
             peak = np.argmax(stns_ZX[i, :])
-            # stns_ZX[i, peak:] *= np.exp(np.linspace(start=0, stop=-1.5, num=P.NUM_X - peak))  # NO normalization: ONLY SHRINKAGE
+            stns_ZX[i, peak:] *= np.exp(np.linspace(start=0, stop=-3.5, num=P.NUM_X - peak))  # NO normalization: ONLY SHRINKAGE
 
+            stns_ZX[i, :] = min_max_normalize_array(stns_ZX[i, :], y_range=[BOUND_LO_y, BOUND_UP_y])  # OOOBSS
             h_x = np.copy(stns_ZX[i, :])
             h_x[peak:] = 0
             H_X[i, :] = h_x
 
         SPLIT_ZX = [0.8, 0.2]
 
-        '''H'''
+        '''H Z'''
         H = np.zeros((P.NUM_Z, P.NUM_X), dtype=np.uint16)  # fall height for f ONLY f!
 
-        inds_buildup = np.where((BOUND_LO_y <= H_Z[:, :]) & (H_Z[:, :] <= BOUND_MI_y))
-        inds_break = np.where(BOUND_MI_y < H_Z[:, :])
-        inds_post = np.where(H_Z[:, :] < BOUND_LO_y)
+        # inds_buildup = np.where((BOUND_LO_y <= H_Z[:, :]) & (H_Z[:, :] <= BOUND_MI_y))
+        # inds_break = np.where(BOUND_MI_y < H_Z[:, :])
+        # inds_post = np.where(H_Z[:, :] < BOUND_LO_y)
+        #
+        # H[inds_buildup] += int(100 * SPLIT_ZX[0])
+        # H[inds_break] += int(1000 * SPLIT_ZX[0])
+        # H[inds_post] += 0
 
-        H[inds_buildup] += int(100 * SPLIT_ZX[0])
-        H[inds_break] += int(1000 * SPLIT_ZX[0])
-        H[inds_post] += 0
-
+        '''H X'''
         inds_buildup = np.where((BOUND_LO_y <= H_X[:, :]) & (H_X[:, :] <= BOUND_MI_y))
         inds_break = np.where(BOUND_MI_y < H_X[:, :])
         inds_post = np.where(H_X[:, :] < BOUND_LO_y)
@@ -129,8 +135,11 @@ def gen_stns():
         H[inds_break] += int(1000 * SPLIT_ZX[1])
         H[inds_post] += 0
 
-        H[np.where((H > 4) & (H < 500))] = 0
-        H[np.where(H >= 500)] = 2
+        # H[np.where((H > 4) & (H < 500))] = 0
+        # H[np.where(H >= 500)] = 2
+
+        H[np.where((H > 4) & (H < 100))] = 1  # build up
+        H[np.where(H >= 100)] = 2  # break
 
         stns_TZX[ii, :, :] = stns_ZX
         TH[ii, :, :] = H

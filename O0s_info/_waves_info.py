@@ -38,7 +38,7 @@ class Waves_info:
         _s.o1_left_x = np.linspace(-100, 1200, num=P.NUM_X)  # this is per 'a' 'b', i.e. horizontal
         _s.o1_left_z = np.linspace(0, 0, num=P.NUM_Z)  # 200, 0 this is per z i.e. away from screen. SHEAR. Its only used to reduce number of points
 
-        _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
+        _s.o1_down_z = np.linspace(300, 301, num=P.NUM_Z)  # 40, 200 first one is starting above lowest
 
         if P.COMPLEXITY == 1:
             _s.o1_down_z = np.linspace(50, 200, num=P.NUM_Z)  # 40, 200 first one is starting above lowest

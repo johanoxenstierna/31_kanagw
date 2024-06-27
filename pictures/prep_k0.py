@@ -91,7 +91,7 @@ def get_c_d(k0, d):
 def get_kanagawa_fractals():
 
     """
-    Need to write conversion from pixels to NUM_Z, NUM_X
+    Use H instead
     """
 
     PATH_IN = './pictures/waves/R/'

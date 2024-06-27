@@ -3,7 +3,7 @@ Matplotlib animation of projectiles, waves and clouds
 
 Only create 1 stns and Y map (or whatever TF its called).
 
-A D D   N E W   W A V E
+YT still needed!
 
 -*Foam f twist after h (probably just shift)
 

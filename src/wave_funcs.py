@@ -41,12 +41,12 @@ def gerstner_waves(o1, o0):
 	xy0 = np.zeros((frames_tot, 2))
 	xy1 = np.zeros((frames_tot, 2))
 	xy2 = np.zeros((frames_tot, 2))
-	dxy0 = np.zeros((frames_tot, 2))
-	dxy1 = np.zeros((frames_tot, 2))
-	dxy2 = np.zeros((frames_tot, 2))
-	peaks0 = np.zeros((frames_tot,))
-	peaks1 = np.zeros((frames_tot,))
-	peaks2 = np.zeros((frames_tot,))
+	dxy0 = [] # np.zeros((frames_tot, 2))
+	dxy1 = [] # np.zeros((frames_tot, 2))
+	dxy2 = [] #np.zeros((frames_tot, 2))
+	# peaks0 = np.zeros((frames_tot,))
+	# peaks1 = np.zeros((frames_tot,))
+	# peaks2 = np.zeros((frames_tot,))
 
 	'''MISTAKE HERE! 3D YT for each object was used. Obviously idiotic.'''
 	# YT = np.zeros((frames_tot, P.NUM_Z, P.NUM_X), dtype=np.float16)
@@ -67,12 +67,12 @@ def gerstner_waves(o1, o0):
 	x = o1.gi['ld'][0]
 	z = o1.gi['ld'][1]  # (formerly this was called y, but its just left_offset and y is the output done below)
 
-	# SS = [0, 1, 2]
 	SS = [1]
-	# SS = [1]
+	# SS = [3]
+	# SS = [0, 1]
 	# SS = [2]
-	SS = [0, 1]
-	DIVISOR = 2
+	# SS = [3]
+	DIVISOR = 3
 	if P.COMPLEXITY == 1:
 		DIVISOR = 2
 
@@ -92,12 +92,12 @@ def gerstner_waves(o1, o0):
 			# d = np.array([0.3, -0.7])  # OBS this is multiplied with x and z, hence may lead to large y!
 			# d = np.array([0.8,  -0.2])  # OBS this is multiplied with x and z, hence may lead to large y!
 			d = np.array([0.1,  -0.9])  # OBS this is multiplied with x and z, hence may lead to large y!
-			c = 0.15  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
+			c = 0.35  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
 				# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
 				# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
-			lam = 240  # DOES NOT AFFECT NUM FRAMES BETWEEN WAVES
+			lam = 150  # DOES NOT AFFECT NUM FRAMES BETWEEN WAVES
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
 			# stn_particle = 0.01
@@ -109,10 +109,10 @@ def gerstner_waves(o1, o0):
 			# d = np.array([0.9, -0.1])
 			d = np.array([0.9, -0.1])
 			# c = 0.1  # [-0.03, -0.015] ?????
-			c = 0.15  # [0.1, 0.02]
+			c = 0.1  # [0.1, 0.02]
 			if P.COMPLEXITY == 1:
 				c /= 5
-			lam = 600  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
+			lam = 700  # Basically, there are many waves, but only a few will be amplified a lot due to stns_t
 			k = 2 * np.pi / lam
 			# stn_particle = o0.gi.stns_zx1[o1.z_key, o1.x_key]
 			# stn_particle = o0.gi.stns_ZX[0, o1.z_key, o1.x_key]
@@ -125,6 +125,16 @@ def gerstner_waves(o1, o0):
 			if P.COMPLEXITY == 1:
 				c /= 5
 			lam = 80
+			k = 2 * np.pi / lam  # wavenumber
+			# stn = stn_particle / k
+			stn = 1 / k
+		elif w == 3:
+			d = np.array([0.5, -0.5])
+			# c = 0.1  # [0.06, 0.03]
+			c = 0.15  # [0.1, 0.02]
+			if P.COMPLEXITY == 1:
+				c /= 5
+			lam = 700
 			k = 2 * np.pi / lam  # wavenumber
 			# stn = stn_particle / k
 			stn = 1 / k
@@ -151,26 +161,28 @@ def gerstner_waves(o1, o0):
 		if w == 0:
 			xy0[i_range, 0] = stns * np.cos(Y)
 			xy0[i_range, 1] = stns * np.sin(Y)
-			dxy0[i_range, 0] = 1 - stns * np.sin(Y)
-			dxy0[i_range, 1] = stns * np.cos(Y)
+			# dxy0[i_range, 0] = 1 - stns * np.sin(Y)
+			# dxy0[i_range, 1] = stns * np.cos(Y)
 		if w == 1:
 			xy1[i_range, 0] = stns * np.cos(Y)
 			xy1[i_range, 1] = stns * np.sin(Y)
-			dxy1[i_range, 0] = 1 - stns * np.sin(Y)
-			dxy1[i_range, 1] = stns * np.cos(Y)
+			# dxy1[i_range, 0] = 1 - stns * np.sin(Y)
+			# dxy1[i_range, 1] = stns * np.cos(Y)
 		if w == 2:
 			xy2[i_range, 0] = stns * np.cos(Y)
 			xy2[i_range, 1] = - stns * np.sin(Y)
-			dxy2[i_range, 0] = 1 - stns * np.sin(Y)  # CHECK IT!!!
-			dxy2[i_range, 1] = stns * np.cos(Y)  # CHECK IT!!!
+			# dxy2[i_range, 0] = 1 - stns * np.sin(Y)  # CHECK IT!!!
+			# dxy2[i_range, 1] = stns * np.cos(Y)  # CHECK IT!!!
 
 		dxy[i_range, 0] += 1 - stns * np.sin(Y)  # mirrored! Either x or y needs to be flipped
 		dxy[i_range, 1] += stns * np.cos(Y)
 		# dxy[i, 2] += (stn * np.cos(y)) / (1 - stn * np.sin(y))  # gradient: not very useful cuz it gets inf at extremes
 
-		if w in [0, 1]:  # MIGHT NEED SHIFTING
+		if w in [0, 1, 3]:  # MIGHT NEED SHIFTING
 			# rotation[i] += dxy[i, 1]
 			rotation[i_range] = dxy[i_range, 1]
+		elif w in [2]:
+			rotation[i_range] = 0
 
 		scale[i_range] = - np.sin(Y)
 
@@ -493,13 +505,13 @@ def foam_f(o1):
 				# if x_right_dist > 0:
 				# x_right_dist += random.randint(0, 100)  # -220, 120
 				# x_right_dist *= 1.5
-				x_right_dist *= abs(np.random.normal(loc=1.5, scale=0.2))
+				x_right_dist *= abs(np.random.normal(loc=1, scale=0.2))
 				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
 				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
 				# y_fall_dist += random.randint(300, 301)  # its flipped below
 				y_fall_dist *= 1  # its flipped below
-				y_fall_dist *= abs(np.random.normal(loc=1, scale=0.2))
+				y_fall_dist *= abs(np.random.normal(loc=0.7, scale=0.2))
 				'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
 				# xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[y_min_ind:, 1]))
 				xy_proj[:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[:, 1]))
