@@ -67,7 +67,7 @@ def gen_stns():
         # mvns.append(mv.rvs())
 
         BOUND_LO_y = 2
-        BOUND_UP_y = 3
+        BOUND_UP_y = 3.5
         BOUND_MI_y = 2.5
 
         input_z, input_x = np.mgrid[0:P.NUM_Z:1, 0:P.NUM_X:1]

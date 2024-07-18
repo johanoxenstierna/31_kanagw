@@ -15,6 +15,11 @@ YT still needed!
 -MORERandom b foam flying into air.
 """
 
+import matplotlib.pyplot as plt
+from sys import platform
+if platform == 'win32':
+    plt.rcParams['animation.ffmpeg_path'] = r'C:\ffmpeg\bin\ffmpeg.exe'
+
 import numpy as np
 import random
 random.seed(7)  # ONLY HERE
@@ -45,8 +50,9 @@ g = gen_objects.GenObjects()
 g.gen_backgr(ax_b, axs0, axs1)
 
 O0 = g.gen_O0()
-# O0 = g.gen_O1(O0)
-O0 = g.gen_O1_new(O0)
+g.gen_O1(O0)
+# g.connect_siblings(O0)
+
 # with open('./O0', 'wb') as f:
 #     pickle.dump(O0, f)
 

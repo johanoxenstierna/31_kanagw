@@ -51,7 +51,7 @@ class GenObjects:
 
         return O0
 
-    def gen_O1_new(_s, O0):
+    def gen_O1(_s, O0):
         """
         This function may eventually be run to generate cut up images beforehand, if it takes too long.
         TODO: Need to think about padding the outsides
@@ -66,7 +66,7 @@ class GenObjects:
         k0 = imread('./pictures/k0.png')
         k0 = np.flipud(k0)  # essential
 
-        d = 0
+        d = 0  # diameter
         if P.COMPLEXITY == 0:  # needed cuz overlap between dots may be of interest
             d = int(1000 / P.NUM_X)
         elif P.COMPLEXITY == 1:
@@ -121,19 +121,10 @@ class GenObjects:
 
                 '''OBS this combines multiple G waves'''
 
-                # time0 = time.time()
-                try:
-                    o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
-                    o1.gen_static()
-                except:
-                    adf = 5
-                # print(time.time() - time0)
-                # print("iii333")
-                O0['waves'].O1[id_static] = o1
+                o1 = O1C(o1_id=id_static, pic=pic_static, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+                o1.gen_static()
 
-                '''Each static has two f linked to it "o1" below.
-                b=foam moving backwards, f=forwards
-                Obs they need to have a lifetime linked with wave-periods. '''
+                O0['waves'].O1[id_static] = o1
 
                 # type = 'f_b'  # THESE GUYS SHOULD ONLY START AFTER BREAK. BEFORE IS WRONG
                 # id_f_b = str(i) + '_' + str(j) + '_' + type
@@ -153,7 +144,13 @@ class GenObjects:
                     type = 'f'  # NOT USED FOR SMALL ONES
                     id_f = str(i) + '_' + str(j) + '_' + type
                     o1f = O1C(o1_id=id_f, pic=f_, o0=O0['waves'], type=type)  # THE PIC IS ALWAYS TIED TO 1 INSTANCE?
+
                     # time0 = time.time()
+
+                    if i + 5 >= (P.NUM_X - 1):
+                        pass
+                    else:
+                        o1f.o1_sib = O0['waves'].O1[str(i + 5) + '_' + str(j) + '_static']
 
                     o1f.gen_f(o1s)
                     # print(time.time() - time0)
@@ -189,4 +186,20 @@ class GenObjects:
         asdf =5
 
         return O0
+
+    def connect_siblings(_s, O0):
+
+        for o1_key, o1 in O0['waves'].O1.items(): #  this loops over the f.
+            if o1.type == 'static':
+                continue
+
+            if int(o1.id_s[0]) + 5 >= (P.NUM_X - 1):
+                continue
+
+            id_sib = str(int(o1.id_s[0]) + 5) + '_' + str(int(o1.id_s[1]) + 0) + '_static'
+
+            o1_sib = O0['waves'].O1[id_sib]
+
+            o1.o1_sib = o1_sib
+
 

@@ -95,12 +95,12 @@ def gerstner_waves(o1, o0):
 			c = 0.35  # [0.1, 0.02] prop to FPS EVEN MORE  from 0.2 at 20 FPS to. NEXT: Incr frames_tot for o2 AND o1
 			if P.COMPLEXITY == 1:
 				c /= 5
-				# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
-				# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.2, -0.8])  # OBS this is multiplied with x and z, hence may lead to large y!
+			# d = np.array([0.9, -0.1])  # OBS this is multiplied with x and z, hence may lead to large y!
 			lam = 150  # DOES NOT AFFECT NUM FRAMES BETWEEN WAVES
 			# stn0 = stn_particle
 			k = 2 * np.pi / lam  # wavenumber
-			# stn_particle = 0.01
+		# stn_particle = 0.01
 
 		# steepness_abs = 1.0
 		elif w == 1:  # BIG ONE
@@ -143,10 +143,7 @@ def gerstner_waves(o1, o0):
 
 		i_range = np.arange(0, frames_tot)
 		Y = k * np.dot(d, np.array([x, z])) - c * i_range
-		try:
-			stns_TZX_particle = o0.gi.stns_TZX[i_range, o1.z_key, o1.x_key]
-		except:
-			adf = 5
+		stns_TZX_particle = o0.gi.stns_TZX[i_range, o1.z_key, o1.x_key]
 		stns = stns_TZX_particle / k
 
 		if w != 2:  # SMALL ONES MOVE LEFT
@@ -161,18 +158,18 @@ def gerstner_waves(o1, o0):
 		if w == 0:
 			xy0[i_range, 0] = stns * np.cos(Y)
 			xy0[i_range, 1] = stns * np.sin(Y)
-			# dxy0[i_range, 0] = 1 - stns * np.sin(Y)
-			# dxy0[i_range, 1] = stns * np.cos(Y)
+		# dxy0[i_range, 0] = 1 - stns * np.sin(Y)
+		# dxy0[i_range, 1] = stns * np.cos(Y)
 		if w == 1:
 			xy1[i_range, 0] = stns * np.cos(Y)
 			xy1[i_range, 1] = stns * np.sin(Y)
-			# dxy1[i_range, 0] = 1 - stns * np.sin(Y)
-			# dxy1[i_range, 1] = stns * np.cos(Y)
+		# dxy1[i_range, 0] = 1 - stns * np.sin(Y)
+		# dxy1[i_range, 1] = stns * np.cos(Y)
 		if w == 2:
 			xy2[i_range, 0] = stns * np.cos(Y)
 			xy2[i_range, 1] = - stns * np.sin(Y)
-			# dxy2[i_range, 0] = 1 - stns * np.sin(Y)  # CHECK IT!!!
-			# dxy2[i_range, 1] = stns * np.cos(Y)  # CHECK IT!!!
+		# dxy2[i_range, 0] = 1 - stns * np.sin(Y)  # CHECK IT!!!
+		# dxy2[i_range, 1] = stns * np.cos(Y)  # CHECK IT!!!
 
 		dxy[i_range, 0] += 1 - stns * np.sin(Y)  # mirrored! Either x or y needs to be flipped
 		dxy[i_range, 1] += stns * np.cos(Y)
@@ -186,66 +183,66 @@ def gerstner_waves(o1, o0):
 
 		scale[i_range] = - np.sin(Y)
 
-		# for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
-		#
-		# 	# if w == 0:
-		# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
-		# 	# 	stn = stn_particle / k
-		# 	# if w == 1:
-		# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
-		# 	# 	# stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
-		# 	# 	stn = stn_particle / k
-		# 	# if w == 2:
-		# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
-		# 	# 	stn = stn_particle / k
-		#
-		# 	# stn = stn_particle / k
-		#
-		# 	# y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
-		# 	y = Y[i]
-		# 	stn = stns[i]
-		#
-		# 	# if w != 2:  # SMALL ONES MOVE LEFT
-		# 	# 	xy[i, 0] += (stn * np.cos(y)) / 2  # this one needs fixing due to foam
-		# 	# elif w == 2:  # small ones
-		# 	# 	xy[i, 0] -= (stn * np.cos(y)) / 2
-		#
-		# 	# xy[i, 1] += (stn * np.sin(y)) / 2
-		# 	# YT[i, o1.z_key, o1.x_key] += (stn * np.sin(y)) / 2
-		#
-		# 	'''Wave specific'''
-		# 	if w == 0:
-		# 		xy0[i, 0] = stn * np.cos(y)
-		# 		xy0[i, 1] = stn * np.sin(y)
-		# 		dxy0[i, 0] = 1 - stn * np.sin(y)
-		# 		dxy0[i, 1] = stn * np.cos(y)
-		# 	if w == 1:
-		# 		xy1[i, 0] = stn * np.cos(y)
-		# 		xy1[i, 1] = stn * np.sin(y)
-		# 		dxy1[i, 0] = 1 - stn * np.sin(y)
-		# 		dxy1[i, 1] = stn * np.cos(y)
-		# 	if w == 2:
-		# 		xy2[i, 0] = stn * np.cos(y)
-		# 		xy2[i, 1] = - stn * np.sin(y)
-		# 		dxy2[i, 0] = 1 - stn * np.sin(y)  # CHECK IT!!!
-		# 		dxy2[i, 1] = stn * np.cos(y)  # CHECK IT!!!
-		#
-		# 	# if w == 2:  # to ensure foam for 2. Perhaps?
-		# 	# 	y_only_2[i] = stn * np.sin(y)
-		#
-		# 	'''
-		# 	All of these are gradients, first two are just decomposed into x y
-		# 	Needed to get f direction.
-		# 	'''
-		# 	dxy[i, 0] += 1 - stn * np.sin(y)  # mirrored! Either x or y needs to be flipped
-		# 	dxy[i, 1] += stn * np.cos(y)
-		# 	# dxy[i, 2] += (stn * np.cos(y)) / (1 - stn * np.sin(y))  # gradient: not very useful cuz it gets inf at extremes
-		#
-		# 	if w in [0, 1]:  # MIGHT NEED SHIFTING
-		# 		# rotation[i] += dxy[i, 1]
-		# 		rotation[i] = dxy[i, 1]
-		#
-		# 	scale[i] = - np.sin(y)
+	# for i in range(0, frames_tot):  # could probably be replaced with np or atleast list compr
+	#
+	# 	# if w == 0:
+	# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+	# 	# 	stn = stn_particle / k
+	# 	# if w == 1:
+	# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+	# 	# 	# stn = (0.4 * stn_particle + 0.6 * stns_t[i]) / k
+	# 	# 	stn = stn_particle / k
+	# 	# if w == 2:
+	# 	# 	stn_particle = o0.gi.stns_TZX[i, o1.z_key, o1.x_key]
+	# 	# 	stn = stn_particle / k
+	#
+	# 	# stn = stn_particle / k
+	#
+	# 	# y = k * np.dot(d, np.array([x, z])) - c * i  # VECTORIZE uses x origin? Also might have to use FFT here
+	# 	y = Y[i]
+	# 	stn = stns[i]
+	#
+	# 	# if w != 2:  # SMALL ONES MOVE LEFT
+	# 	# 	xy[i, 0] += (stn * np.cos(y)) / 2  # this one needs fixing due to foam
+	# 	# elif w == 2:  # small ones
+	# 	# 	xy[i, 0] -= (stn * np.cos(y)) / 2
+	#
+	# 	# xy[i, 1] += (stn * np.sin(y)) / 2
+	# 	# YT[i, o1.z_key, o1.x_key] += (stn * np.sin(y)) / 2
+	#
+	# 	'''Wave specific'''
+	# 	if w == 0:
+	# 		xy0[i, 0] = stn * np.cos(y)
+	# 		xy0[i, 1] = stn * np.sin(y)
+	# 		dxy0[i, 0] = 1 - stn * np.sin(y)
+	# 		dxy0[i, 1] = stn * np.cos(y)
+	# 	if w == 1:
+	# 		xy1[i, 0] = stn * np.cos(y)
+	# 		xy1[i, 1] = stn * np.sin(y)
+	# 		dxy1[i, 0] = 1 - stn * np.sin(y)
+	# 		dxy1[i, 1] = stn * np.cos(y)
+	# 	if w == 2:
+	# 		xy2[i, 0] = stn * np.cos(y)
+	# 		xy2[i, 1] = - stn * np.sin(y)
+	# 		dxy2[i, 0] = 1 - stn * np.sin(y)  # CHECK IT!!!
+	# 		dxy2[i, 1] = stn * np.cos(y)  # CHECK IT!!!
+	#
+	# 	# if w == 2:  # to ensure foam for 2. Perhaps?
+	# 	# 	y_only_2[i] = stn * np.sin(y)
+	#
+	# 	'''
+	# 	All of these are gradients, first two are just decomposed into x y
+	# 	Needed to get f direction.
+	# 	'''
+	# 	dxy[i, 0] += 1 - stn * np.sin(y)  # mirrored! Either x or y needs to be flipped
+	# 	dxy[i, 1] += stn * np.cos(y)
+	# 	# dxy[i, 2] += (stn * np.cos(y)) / (1 - stn * np.sin(y))  # gradient: not very useful cuz it gets inf at extremes
+	#
+	# 	if w in [0, 1]:  # MIGHT NEED SHIFTING
+	# 		# rotation[i] += dxy[i, 1]
+	# 		rotation[i] = dxy[i, 1]
+	#
+	# 	scale[i] = - np.sin(y)
 
 	dxy[:, 0] = -dxy[:, 0]
 	dxy[:, 1] = -dxy[:, 1]
@@ -332,7 +329,7 @@ def foam_b(o1, peak_inds):
 	return xy_t, alphas, rotation
 
 
-def foam_f(o1):
+def foam_f(o1f, o1s):
 	"""
 	New idea: Everything between start and start + num is available.
 	So use everything and then just move object to next peak by shift.
@@ -342,10 +339,10 @@ def foam_f(o1):
 	EARLINESS_SHIFT = 5
 	MIN_DIST_FRAMES_BET_WAVES = 15
 
-	xy_t = np.copy(o1.xy_t)
-	xy_t0 = np.copy(o1.xy_t0)
+	xy_t = np.copy(o1s.xy_t)
+	xy_t0 = np.copy(o1s.xy_t0)
 
-	rotation0 = np.full((len(o1.xy)), fill_value=-0.0001)  # CALCULATED HERE
+	rotation0 = np.full((len(o1s.xy)), fill_value=-0.0001)  # CALCULATED HERE
 	alphas = np.full(shape=(len(xy_t),), fill_value=0.0)
 	scale = np.zeros(shape=(len(xy_t),))
 
@@ -384,10 +381,10 @@ def foam_f(o1):
 
 		'''OBS THIS WRITES TO xy_t STRAIGHT'''
 		xy_tp = np.copy(xy_t[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
-		xy_tp0 = np.copy(xy_t0[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
-		h = o1.o0.gi.TH[peak_ind0, o1.z_key, o1.x_key]
+		# xy_tp0 = np.copy(xy_t0[peak_ind0:peak_ind1])  # xy_tp: xy coords time between peaks
+		h = o1s.o0.gi.TH[peak_ind0, o1s.z_key, o1s.x_key]
 
-		if len(xy_tp0) < MIN_DIST_FRAMES_BET_WAVES:
+		if len(xy_tp) < MIN_DIST_FRAMES_BET_WAVES:
 			raise Exception("W   T   F")
 
 		rotation_tp = np.linspace(0, -1.5 * np.pi, num=int(peak_ind1 - peak_ind0))
@@ -413,7 +410,7 @@ def foam_f(o1):
 		y_min_ind = np.argmin(xy_tp[:, 1])
 		y_min = xy_tp[y_min_ind, 1]
 		y_peak1 = xy_tp[-1, 1]
-		y_fall_dist = y_peak1 - y_min
+		y_fall_dist = y_peak0 - y_min  # positive value here
 
 		x_max_ind = np.argmax(xy_tp[:, 0])  # DOESNT WORK WITH MULTIPLE WAVES. TODO: USE PI INSTEAD
 		x_max = xy_tp[x_max_ind, 0]
@@ -422,8 +419,6 @@ def foam_f(o1):
 		x_peak_ind1 = xy_tp[-1, 0]
 		x_right_dist = x_max - x_min
 
-		# yy = o1.YT[0, 3, 3]
-		asdf = 5
 
 		'''
 		NUM HERE IS FOR PROJ. STARTS WHEN Y AT MAX
@@ -431,7 +426,7 @@ def foam_f(o1):
 		NUM_P IS ONLY PROJ
 		NUM_B IS FOR RISING		'''
 
-		num_p = len(xy_tp0)
+		num_p = len(xy_tp)
 
 		# v_frame = abs(xy_t0[y_max_ind + 1, 0] - xy_t0[y_max_ind, 0])  # perhaps should be zero bcs xy_tp already includes all v that is needed?
 		# v_p = 1
@@ -445,16 +440,10 @@ def foam_f(o1):
 		pi = bug, 2 pi = bug, 0.5 pi = straight up, 0.25 pi = 45 deg, 0.4 pi = more up, 0.1 pi = more horiz. 0.5-1 = neg x values
 		Flipping doesn't change any here. 
 		'''
-		# theta_p = 0.25 * np.pi  # obs flipped? Increase to turn up
-		# G = 9.8
 
-		'''
-		Alpha
-		TODO: Use H: Its discretized
-		'''
 		alpha_UB = 1
 
-		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2.5, b=10, loc=0)  # HAVE TO HAVE A PLACEHOLDER
+		alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=2.5, b=10, loc=0)  # HAVE TO HAVE A PLACEHOLDER
 		alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0, alpha_UB])
 
 		# if h > 2.5:
@@ -488,13 +477,13 @@ def foam_f(o1):
 				y_fall_dist *= 2
 				xy_proj[:, 1] += np.linspace(start=0, stop=y_fall_dist, num=len(xy_proj[:, 0]))
 
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=3, b=8, loc=0)  # ONLY FIRST PART
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=3, b=8, loc=0)  # ONLY FIRST PART
 
 			aa = 6
-			# if random.random() < 0.05:  # flying
-			# 	xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
-			# 	xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
-			# 	alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
+		# if random.random() < 0.05:  # flying
+		# 	xy_proj[:, 0] = np.linspace(0, -150, num=num_p)
+		# 	xy_proj[:, 1] = np.linspace(0, 300, num=num_p)
+		# 	alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=10, loc=0)  # ONLY FIRST PART
 
 		elif h == 2:  # breaking
 
@@ -505,37 +494,30 @@ def foam_f(o1):
 				# if x_right_dist > 0:
 				# x_right_dist += random.randint(0, 100)  # -220, 120
 				# x_right_dist *= 1.5
-				x_right_dist *= abs(np.random.normal(loc=1, scale=0.2))
+				x_right_dist *= abs(np.random.normal(loc=2.5, scale=0.01))
 				# xy_proj[x_max_ind:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[x_max_ind:, 1]))
 				xy_proj[:, 0] += np.linspace(start=0, stop=x_right_dist, num=len(xy_proj[:, 0]))
 
 				# y_fall_dist += random.randint(300, 301)  # its flipped below
 				y_fall_dist *= 1  # its flipped below
-				y_fall_dist *= abs(np.random.normal(loc=0.7, scale=0.2))
+				y_fall_dist *= abs(np.random.normal(loc=0.7, scale=0.02))
 				'''y_up_dist is all the way. But maybe it shouldnt be pushed all the way down'''
 				# xy_proj[y_min_ind:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[y_min_ind:, 1]))
 				xy_proj[:, 1] = np.linspace(start=0, stop=-y_fall_dist, num=len(xy_proj[:, 1]))
 
-
-
-				# num_first = len(xy_proj[:y_min_ind, 0])
-				# alpha_mask_0 = beta.pdf(x=np.linspace(0, 1, num=num_first), a=2, b=2, loc=0)
-				# alpha_mask_0 = min_max_normalize_array(alpha_mask_0, y_range=[0.0, alpha_UB])
-				#
-				# num_second = len(xy_proj[y_min_ind:, 0])
-				# alpha_mask_1 = beta.pdf(x=np.linspace(0, 1, num=num_second), a=2, b=2, loc=0)
-				# alpha_mask_1 = min_max_normalize_array(alpha_mask_1, y_range=[0.0, alpha_UB])
-
-				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=2, b=6, loc=0)  # HAVE TO HAVE A PLACEHOLDER
+				alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=2, b=6, loc=0)  # HAVE TO HAVE A PLACEHOLDER
 				alpha_mask_t = min_max_normalize_array(alpha_mask_t, y_range=[0.0, alpha_UB])
-				# print("Adsfasdf")
 
-				# alpha_mask_t[0:num_first] = alpha_mask_0
-				# alpha_mask_t[num_first:] = alpha_mask_1
-
-				aa = 67
+				if o1f.o1_sib != None:
+					o1_sib = o1f.o1_sib
+					inds_under = np.where(xy_t[peak_ind0:peak_ind1, 1] < o1_sib.xy_t[peak_ind0:peak_ind1, 1])[0]
+					if len(inds_under) > 0:
+						xy_proj[inds_under[0]:, 1] = np.linspace(start=float(xy_proj[inds_under[0], 1]),
+																 stop=float(xy_proj[inds_under[0], 1]) + 500,
+																 num=len(xy_proj[inds_under[0]:, 1]))
 
 		elif h == 0:
+
 			'''
 			ChaosTK: 
 			
@@ -549,17 +531,18 @@ def foam_f(o1):
 			# 	y_stop = random.randint(-20, 200)
 
 			# x_stop = random.randint(50, 400)
-			x_stop = np.random.normal(loc=200, scale=50)
+			x_stop = np.random.normal(loc=200, scale=5)
 
 			# y_stop = random.randint(-100, 100)
-			y_stop = np.random.normal(loc=-20, scale=50)
+			y_stop = np.random.normal(loc=-20, scale=5)
 
 			# y_stop = -100
 			#
 			xy_proj[:, 0] = np.linspace(0, x_stop, num=num_p)
 			xy_proj[:, 1] = np.linspace(0, y_stop, num=num_p)
 
-			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp0)), a=5, b=10, loc=0)
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=5, b=10, loc=0)
+			alpha_mask_t = beta.pdf(x=np.linspace(0, 1, len(xy_tp)), a=500, b=1000, loc=0)
 			aaa = 5
 		else:
 			raise Exception("h not 0, 1, 2")
@@ -570,10 +553,13 @@ def foam_f(o1):
 		# TODO: ADD TEST for nan
 
 		'''OBBBBBBSSSS REMEMBER!!!! YOUR SHIFTING IT!!!! NOT SETTING'''
+
 		if h in [1, 2]:
 			xy_t[peak_ind0:peak_ind1, :] += xy_proj
 		else:
 			xy_t[peak_ind0:peak_ind1, :] = xy_proj
+
+			adff = 5
 
 	if np.max(alphas) > 1.000:
 		asdf = 5

@@ -21,15 +21,18 @@ class O1C(AbstractObject, AbstractSSS):
         z_key_g = 20000 - _s.z_key * 100  # the bigger the z_key, the smaller the zorder. Each Z: 100, each X: 1
         _s.zorder = z_key_g + _s.x_key
 
+        _s.type = type
         _s.o0 = o0  # parent
         _s.pic = pic  # the png
         _s.centroid = [int(pic.shape[0] / 2), int(pic.shape[1] / 2)]
         # _s.type = type
-        _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
-        # _s.gi = o0.gi.o1_gi  # REMOVE OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
+        # _s.gi = deepcopy(o0.gi.o1_gi)  # OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
+        _s.gi = o0.gi.o1_gi  # REMOVE OBS!  COPY SHOULD NOT BE THERE. SHOULD BE READ-ONLY.OK WHILE FEW OBJECTS.
         # ONLY OBJECTS THAT ARE MUTABLE ARE TO BE COPIED
 
         AbstractSSS.__init__(_s, o0, o1_id)
+
+        _s.o1_sib = None  # sibling. THIS IS THE CHECK CONDITION
 
         _s.O2 = {}
         _s.alphas = None
@@ -40,6 +43,7 @@ class O1C(AbstractObject, AbstractSSS):
 
         if P.COMPLEXITY == 0:
             pass
+
         # elif P.COMPLEXITY == 1:
         # NOT HERE
         # _s.gi['ld'][0] += random.randint(-10, 10)
@@ -47,6 +51,7 @@ class O1C(AbstractObject, AbstractSSS):
 
         # _s.gi['steepness'] = _s.o0.gi.o1_steepnessess_z[_s.z_id] #+ np.random.randint(low=0, high=50, size=1)[0]
         # _s.gi['steepness'] = _s.o0.gi.stns_zx[_s.z_key, _s.x_key] #+ np.random.randint(low=0, high=50, size=1)[0]
+
         _s.gi['o1_left_start_z'] = _s.o0.gi.o1_left_starts_z[_s.z_key] #+ np.random.randint(low=0, high=50, size=1)[0]
 
         _s.set_frame_ss(0, _s.gi['frames_tot'])
@@ -117,14 +122,15 @@ class O1C(AbstractObject, AbstractSSS):
 
         # _s.xy[:, 1] += 1500  # WTF
 
-    def gen_f(_s, o1):
+    def gen_f(_s, o1s):
         """
 
         """
 
         '''indicies where y-tangent is at max'''
+        # if int(o1.id_s[0]) + 5 >= (P.NUM_X - 1):
 
-        _s.xy_t, _s.alphas, _s.rotation, _s.scale = foam_f(o1)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
+        _s.xy_t, _s.alphas, _s.rotation, _s.scale = foam_f(_s, o1s)  # NEED TO SHRINK GERSTNER WAVE WHEN IT BREAKS
         _s.zorder += 2530  # 1000 Z = 10 P.NUM_Z
 
         _s.xy = np.copy(_s.xy_t)
@@ -133,7 +139,7 @@ class O1C(AbstractObject, AbstractSSS):
         _s.xy[:, 1] += _s.gi['ld'][1]  # - xy[0, 1]
         # _s.xy[:, 1] += 10
 
-        _s.scale = np.copy(o1.scale)
+        _s.scale = np.copy(o1s.scale)
         _s.scale = min_max_normalization(_s.scale, y_range=[0.6, 1])
         # _s.scale = np.ones((len(o1.scale),))
         # o1.scale = np.ones((len(o1.scale),))
